@@ -56,6 +56,15 @@
       height: 72px;
       flex-shrink: 0;
     }
+    .tagline {
+      text-align: center;
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      margin: 0 0 8px;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
     .hint {
       color: var(--muted);
       margin-bottom: 14px;
@@ -351,7 +360,8 @@
         <button class="lang-btn" data-lang="es">Español</button>
       </div>
     </div>
-    <div class="hint"><strong>MeshTune: Don't wing it. Screw it right.</strong> <span data-i18n="hint_text">Загрузите один или несколько конфигурационных файлов (.cfg/.txt/.log). Инструмент поддерживает совместную загрузку printer.cfg и printer.base.cfg и выбирает приоритетный источник mesh автоматически.</span></div>
+    <p class="tagline">MeshTune: Don't wing it. Screw it right.</p>
+    <div class="hint"><span data-i18n="hint_text">Загрузите один или несколько конфигурационных файлов (.cfg/.txt/.log). Инструмент поддерживает совместную загрузку printer.cfg и printer.base.cfg и выбирает приоритетный источник mesh автоматически.</span></div>
 
     <div class="grid">
       <section class="card viz-card">
