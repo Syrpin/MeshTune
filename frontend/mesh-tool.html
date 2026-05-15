@@ -559,6 +559,15 @@
         table_pv: "Residual PV:",
         table_rms: "Residual RMS:",
         table_twist: "Twist:",
+        dir_left: "влево",
+        dir_right: "вправо",
+        action_tighten: "ЗАКРУТИТЬ",
+        action_loosen: "ОТКРУТИТЬ",
+        unit_mm: "мм",
+        unit_turns: "об",
+        turn_cw: "CW",
+        turn_ccw: "CCW",
+        ref_frame: "Система отсчета: смотреть сверху на стол со стороны передней панели.",
       },
       en: {
         hint_text: "Load one or more configuration files (.cfg/.txt/.log). The tool supports joint loading of printer.cfg and printer.base.cfg and automatically selects the priority mesh source.",
@@ -657,6 +666,15 @@ When to Stop:
         table_pv: "Residual PV:",
         table_rms: "Residual RMS:",
         table_twist: "Twist:",
+        dir_left: "left",
+        dir_right: "right",
+        action_tighten: "TIGHTEN",
+        action_loosen: "LOOSEN",
+        unit_mm: "mm",
+        unit_turns: "turns",
+        turn_cw: "CW",
+        turn_ccw: "CCW",
+        ref_frame: "Reference frame: view bed from above, front panel facing you.",
       },
       es: {
         hint_text: "Cargue uno o más archivos de configuración (.cfg/.txt/.log). La herramienta admite la carga conjunta de printer.cfg y printer.base.cfg y selecciona automáticamente la fuente de malla prioritaria.",
@@ -755,6 +773,15 @@ Cuándo Detener:
         table_pv: "PV Residual:",
         table_rms: "RMS Residual:",
         table_twist: "Torsión:",
+        dir_left: "izquierda",
+        dir_right: "derecha",
+        action_tighten: "APRETAR",
+        action_loosen: "AFLOJAR",
+        unit_mm: "mm",
+        unit_turns: "vueltas",
+        turn_cw: "CW",
+        turn_ccw: "CCW",
+        ref_frame: "Marco de referencia: ver cama desde arriba, panel frontal mirando hacia ti.",
       }
     };
 
@@ -1386,14 +1413,14 @@ Cuándo Detener:
       const primaryDirectionMode = document.getElementById("mechDirectionPrimary").value;
       const rightTargetMode = document.getElementById("mechTargetRight").value;
 
-      const primaryDirection = primaryDirectionMode === "left" ? "влево" : "вправо";
-      const oppositeDirection = primaryDirectionMode === "left" ? "вправо" : "влево";
-      const primaryVerb = "ОТКРУТИТЬ";
-      const oppositeVerb = "ЗАКРУТИТЬ";
-      const primaryTurn = primaryDirectionMode === "left" ? "CCW" : "CW";
-      const oppositeTurn = primaryDirectionMode === "left" ? "CW" : "CCW";
-      const rightTarget = rightTargetMode === "closer" ? "ближе к соплу" : "дальше от сопла";
-      const leftTarget = rightTargetMode === "closer" ? "дальше от сопла" : "ближе к соплу";
+      const primaryDirection = primaryDirectionMode === "left" ? t("dir_left") : t("dir_right");
+      const oppositeDirection = primaryDirectionMode === "left" ? t("dir_right") : t("dir_left");
+      const primaryVerb = primaryDirectionMode === "left" ? t("action_loosen") : t("action_tighten");
+      const oppositeVerb = primaryDirectionMode === "left" ? t("action_tighten") : t("action_loosen");
+      const primaryTurn = primaryDirectionMode === "left" ? t("turn_ccw") : t("turn_cw");
+      const oppositeTurn = primaryDirectionMode === "left" ? t("turn_cw") : t("turn_ccw");
+      const rightTarget = rightTargetMode === "closer" ? t("target_closer") : t("target_farther");
+      const leftTarget = rightTargetMode === "closer" ? t("target_farther") : t("target_closer");
 
       return {
         mode: `${primaryDirectionMode}_${rightTargetMode}`,
@@ -1404,7 +1431,7 @@ Cuándo Detener:
           [primaryDirection]: { verb: primaryVerb, turn: primaryTurn, target: rightTarget },
           [oppositeDirection]: { verb: oppositeVerb, turn: oppositeTurn, target: leftTarget },
         },
-        reference: "Система отсчета: смотреть сверху на стол со стороны передней панели.",
+        reference: t("ref_frame"),
         mapping: `${primaryDirection} = ${primaryVerb} = ${primaryTurn} = ${rightTarget}, ${oppositeDirection} = ${oppositeVerb} = ${oppositeTurn} = ${leftTarget}.`,
       };
     }
@@ -1484,7 +1511,7 @@ Cuándo Detener:
       lines.push(rotation.mapping);
       lines.push(t("one_pass"));
       actionable.forEach((r) => {
-        lines.push(`  ${r.label}: ${r.verb} (${r.direction}), ${fmt(r.turns, 2)} об (${fmt(r.degrees, 0)}°)`);
+        lines.push(`  ${r.label}: ${r.verb} (${r.direction}), ${fmt(r.turns, 2)} ${t("unit_turns")} (${fmt(r.degrees, 0)}°)`);
       });
       lines.push(t("after_adjust"));
       document.getElementById("stepProgramOut").textContent = lines.join("\n");
@@ -1493,7 +1520,7 @@ Cuándo Detener:
       if (bigCorrections.length) {
         warnEl.style.display = "";
         warnEl.textContent = t("big_correction") + " " +
-          bigCorrections.map((r) => `${r.label} ${fmt(r.turns, 2)} об`).join(", ") +
+          bigCorrections.map((r) => `${r.label} ${fmt(r.turns, 2)} ${t("unit_turns")}`).join(", ") +
           ".\n" + t("check_free");
       } else {
         warnEl.style.display = "none";
@@ -1525,7 +1552,7 @@ Cuándo Detener:
       renderStepProgram(rows);
 
       document.getElementById("balanceHint").textContent =
-        `${t("balance_hint")} ${rows.map((r) => r.label).join(" -> ")}. ${t("max_correction")} ${fmt(maxAbs, 3)} мм.` +
+        `${t("balance_hint")} ${rows.map((r) => r.label).join(" -> ")}. ${t("max_correction")} ${fmt(maxAbs, 3)} ${t("unit_mm")}.` +
         ` ${t("rule")} ${rotation.reference} ${rotation.mapping}`;
 
       const mode = document.getElementById("screwMode").value;
@@ -1543,7 +1570,7 @@ Cuándo Detener:
         `screw_mode=${modeText}`,
         `rotation_mode=${rotation.primaryDirection}:${rotation.byDirection[rotation.primaryDirection].verb}/${rotation.byDirection[rotation.primaryDirection].turn}/${rotation.byDirection[rotation.primaryDirection].target}`,
         "",
-        ...rows.map((r) => `${r.label}: delta=${fmt(r.delta)} mm, turns=${fmt(r.turns, 2)}, degrees=${fmt(r.degrees, 0)}, action=${r.verb} (${r.direction}), target=${r.target}`),
+        ...rows.map((r) => `${r.label}: delta=${fmt(r.delta)} ${t("unit_mm")}, turns=${fmt(r.turns, 2)}, degrees=${fmt(r.degrees, 0)}, action=${r.verb} (${r.direction}), target=${r.target}`),
       ].join("\n");
     }
 
@@ -1556,21 +1583,21 @@ Cuándo Detener:
       document.getElementById("modelOut").textContent = [
         t("model_plane"),
         `a=${fmt(model.a, 7)} b=${fmt(model.b, 7)} c=${fmt(model.c, 4)}`,
-        `${t("model_slope_x")} ${fmt(model.slope_across_x, 3)} мм (${t("model_tilt")} ${fmt(model.tilt_x_deg, 3)}°)`,
-        `${t("model_slope_y")} ${fmt(model.slope_across_y, 3)} мм (${t("model_tilt")} ${fmt(model.tilt_y_deg, 3)}°)`,
+        `${t("model_slope_x")} ${fmt(model.slope_across_x, 3)} ${t("unit_mm")} (${t("model_tilt")} ${fmt(model.tilt_x_deg, 3)}°)`,
+        `${t("model_slope_y")} ${fmt(model.slope_across_y, 3)} ${t("unit_mm")} (${t("model_tilt")} ${fmt(model.tilt_y_deg, 3)}°)`,
         `${t("model_class")} ${model.class_label}`,
       ].join("\n");
 
-      document.getElementById("kpiPv").textContent = `${fmt(model.residual_pv)} мм`;
-      document.getElementById("kpiRms").textContent = `${fmt(model.residual_rms)} мм`;
-      document.getElementById("kpiTwist").textContent = `${fmt(model.twist)} мм`;
+      document.getElementById("kpiPv").textContent = `${fmt(model.residual_pv)} ${t("unit_mm")}`;
+      document.getElementById("kpiRms").textContent = `${fmt(model.residual_rms)} ${t("unit_mm")}`;
+      document.getElementById("kpiTwist").textContent = `${fmt(model.twist)} ${t("unit_mm")}`;
       document.getElementById("kpiPlanarity").textContent = `${model.planarity_score}/100`;
     }
 
     function renderStats(mesh, model) {
       document.getElementById("meshStats").textContent =
-        `${t("mesh_size")} ${mesh.x_count}x${mesh.y_count} | ${t("mesh_min")} ${fmt(mesh.z_min)} мм | ${t("mesh_max")} ${fmt(mesh.z_max)} мм | ${t("mesh_range")} ${fmt(mesh.z_range)} мм | ${t("mesh_avg")} ${fmt(mesh.z_avg)} мм` +
-        (model ? ` | ${t("mesh_residual_pv")} ${fmt(model.residual_pv)} мм | ${t("mesh_residual_rms")} ${fmt(model.residual_rms)} мм` : "");
+        `${t("mesh_size")} ${mesh.x_count}x${mesh.y_count} | ${t("mesh_min")} ${fmt(mesh.z_min)} ${t("unit_mm")} | ${t("mesh_max")} ${fmt(mesh.z_max)} ${t("unit_mm")} | ${t("mesh_range")} ${fmt(mesh.z_range)} ${t("unit_mm")} | ${t("mesh_avg")} ${fmt(mesh.z_avg)} ${t("unit_mm")}` +
+        (model ? ` | ${t("mesh_residual_pv")} ${fmt(model.residual_pv)} ${t("unit_mm")} | ${t("mesh_residual_rms")} ${fmt(model.residual_rms)} ${t("unit_mm")}` : "");
 
       document.getElementById("rawOut").textContent = JSON.stringify({ mesh, model }, null, 2);
     }
