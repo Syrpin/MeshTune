@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MeshTune</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
     :root {
       --bg: #0e1418;
@@ -33,6 +34,20 @@
       margin: 4px 0 10px;
       font-size: 1.35rem;
       letter-spacing: 0.02em;
+    }
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 0 10px;
+    }
+    .logo-row h1 {
+      margin: 0;
+    }
+    .logo-svg {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
     }
     .hint {
       color: var(--muted);
@@ -307,7 +322,25 @@
       <button class="lang-btn" data-lang="en">English</button>
       <button class="lang-btn" data-lang="es">Español</button>
     </div>
-    <h1>MeshTune</h1>
+    <div class="logo-row">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="logo-svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="lg" x1="100%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stop-color="#0d2137"/>
+            <stop offset="100%" stop-color="#17a2a4"/>
+          </linearGradient>
+        </defs>
+        <polygon points="50,5 91,28 91,72 50,95 9,72 9,28" fill="#c9dae4" stroke="#8eaabb" stroke-width="6"/>
+        <g stroke="#192e42" stroke-width="3" fill="none">
+          <line x1="24" y1="50" x2="76" y2="50"/>
+          <line x1="50" y1="24" x2="50" y2="76"/>
+        </g>
+        <circle cx="48" cy="53" r="5" fill="#192e42"/>
+        <line x1="50" y1="51" x2="71" y2="29" stroke="url(#lg)" stroke-width="5.5" stroke-linecap="round"/>
+        <polygon points="76,23 61,30 68,44" fill="#17a2a4"/>
+      </svg>
+      <h1>MeshTune</h1>
+    </div>
     <div class="hint"><strong>MeshTune: Don't wing it. Screw it right.</strong> <span data-i18n="hint_text">Загрузите один или несколько конфигурационных файлов (.cfg/.txt/.log). Инструмент поддерживает совместную загрузку printer.cfg и printer.base.cfg и выбирает приоритетный источник mesh автоматически.</span></div>
 
     <div class="grid">
