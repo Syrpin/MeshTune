@@ -924,12 +924,12 @@ Cuándo Detener:
     function updateSourceBadges({ printerName, sourceName, screwThread, kinematics }) {
       const p = document.getElementById("printerNameBadge");
       const s = document.getElementById("sourceBadge");
-      const t = document.getElementById("threadBadge");
+      const threadEl = document.getElementById("threadBadge");
 
       const printerLabel = kinematics ? `${printerName} (${kinematics})` : (printerName || t("undefined_printer"));
       p.innerHTML = `<span data-i18n="printer_badge">${t("printer_badge")}</span> ${printerLabel}`;
       s.innerHTML = `<span data-i18n="source_badge">${t("source_badge")}</span> ${sourceName || "-"}`;
-      t.innerHTML = `<span data-i18n="thread_badge">${t("thread_badge")}</span> ${formatThreadBadge(screwThread)}`;
+      threadEl.innerHTML = `<span data-i18n="thread_badge">${t("thread_badge")}</span> ${formatThreadBadge(screwThread)}`;
     }
 
     function findAllMeshes(text) {
