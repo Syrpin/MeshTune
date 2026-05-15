@@ -30,39 +30,35 @@
       margin: 0 auto;
       padding: 16px;
     }
-    h1 {
-      margin: 0;
-      font-size: 2rem;
-      letter-spacing: 0.03em;
-      line-height: 1.1;
-    }
     .header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      grid-template-rows: repeat(3, 1fr);
+      min-height: 96px;
       margin-bottom: 14px;
     }
-    .logo-row {
+    .logo-col {
+      grid-column: 1;
+      grid-row: 1 / 4;
       display: flex;
       align-items: center;
-      gap: 14px;
-    }
-    .logo-row h1 {
-      margin: 0;
+      padding-right: 18px;
     }
     .logo-svg {
-      width: 72px;
-      height: 72px;
+      width: 90px;
+      height: 90px;
       flex-shrink: 0;
     }
     .tagline {
+      grid-column: 2;
+      grid-row: 2;
+      align-self: center;
       text-align: center;
       font-style: italic;
       font-size: 1.05rem;
       color: var(--muted);
       letter-spacing: 0.02em;
-      margin: 0 0 8px;
+      margin: 0;
       font-family: Georgia, 'Times New Roman', serif;
     }
     .hint {
@@ -297,10 +293,12 @@
       opacity: 0.9;
     }
     .lang-switcher {
+      grid-column: 3;
+      grid-row: 1;
+      align-self: center;
       display: flex;
       gap: 6px;
       align-items: center;
-      flex-shrink: 0;
       white-space: nowrap;
     }
     .lang-btn {
@@ -334,7 +332,7 @@
 <body>
   <div class="wrap">
     <div class="header-row">
-      <div class="logo-row">
+      <div class="logo-col">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="logo-svg" aria-hidden="true">
         <defs>
           <linearGradient id="lg" x1="100%" y1="100%" x2="0%" y2="0%">
@@ -351,8 +349,8 @@
         <line x1="50" y1="51" x2="71" y2="29" stroke="url(#lg)" stroke-width="5.5" stroke-linecap="round"/>
         <polygon points="76,23 61,30 68,44" fill="#17a2a4"/>
       </svg>
-      <h1>MeshTune</h1>
       </div>
+      <p class="tagline">MeshTune: Don't wing it. Screw it right.</p>
       <div class="lang-switcher">
         <span style="color: var(--muted); font-size: 0.85rem;">Language:</span>
         <button class="lang-btn active" data-lang="ru">Русский</button>
@@ -360,7 +358,6 @@
         <button class="lang-btn" data-lang="es">Español</button>
       </div>
     </div>
-    <p class="tagline">MeshTune: Don't wing it. Screw it right.</p>
     <div class="hint"><span data-i18n="hint_text">Загрузите один или несколько конфигурационных файлов (.cfg/.txt/.log). Инструмент поддерживает совместную загрузку printer.cfg и printer.base.cfg и выбирает приоритетный источник mesh автоматически.</span></div>
 
     <div class="grid">
