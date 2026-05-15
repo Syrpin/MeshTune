@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AD5X — Калибровка шага резьбы</title>
+  <style>
+    :root {
+      --bg: #0e1418;
+      --panel: #182128;
+      --panel-2: #22303a;
+      --text: #e6f1f5;
+      --muted: #9ab0b8;
+      --accent: #17a2a4;
+      --warn: #ef9f52;
+      --ok: #49b56f;
+      --bad: #d35a5a;
+      --line: #2f404c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      color: var(--text);
+      background: radial-gradient(circle at 5% 10%, #1a242c 0%, var(--bg) 40%),
+                  linear-gradient(150deg, #0e1418, #101c23 45%, #0f1b22);
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 18px 16px; }
+    h1 { font-size: 1.35rem; letter-spacing: 0.02em; margin-bottom: 4px; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
+
+    .steps { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      background: linear-gradient(170deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .step-badge {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-badge.done { background: var(--ok); }
+    .step-badge.pending { background: var(--line); color: var(--muted); }
+    .card-title { font-weight: 600; font-size: 1rem; }
+
+    label { color: var(--muted); font-size: 0.85rem; display: block; margin-bottom: 4px; }
+    input[type="file"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--text);
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    input[type="file"]:hover { border-color: var(--accent); }
+
+    .select-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+    .pick-group { display: flex; flex-direction: column; gap: 5px; }
+    .pick-group label { margin-bottom: 0; }
+    select {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px 10px;
+      color: var(--text);
+      font-size: 0.9rem;
+      min-width: 160px;
+    }
+    select:focus { outline: none; border-color: var(--accent); }
+
+    .corner-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+      max-width: 340px;
+    }
+    .corner-btn {
+      padding: 10px 8px;
+      border-radius: 8px;
+      border: 2px solid var(--line);
+      background: var(--bg);
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .corner-btn:hover { border-color: var(--accent); color: var(--text); }
+    .corner-btn.selected { border-color: var(--accent); background: #17a2a420; color: var(--accent); }
+    .corner-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+    /* Corner layout: rear is top visually, front is bottom */
+    .corner-rl { grid-column: 1; grid-row: 1; }
+    .corner-rr { grid-column: 2; grid-row: 1; }
+    .corner-fl { grid-column: 1; grid-row: 2; }
+    .corner-fr { grid-column: 2; grid-row: 2; }
+
+    .dir-group { display: flex; gap: 8px; margin-top: 10px; }
+    .dir-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid var(--line);
+      background: var(--bg);
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .dir-btn:hover { border-color: var(--warn); color: var(--text); }
+    .dir-btn.selected { border-color: var(--warn); background: #ef9f5220; color: var(--warn); }
+
+    .mesh-preview {
+      margin-top: 10px;
+      font-family: Consolas, monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: none;
+    }
+    .mesh-preview.visible { display: block; }
+    .mesh-preview .corner-val { color: var(--text); font-weight: 600; }
+    .mesh-preview .hi { color: var(--warn); }
+    .mesh-preview .lo { color: #6ecfff; }
+
+    .result-card {
+      background: linear-gradient(170deg, #1a2a1e, #1e3424);
+      border: 1px solid #3a6040;
+      border-radius: 12px;
+      padding: 18px;
+      display: none;
+    }
+    .result-card.visible { display: block; }
+    .result-title { font-size: 1rem; font-weight: 700; color: var(--ok); margin-bottom: 14px; }
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .result-box {
+      background: #0e1a12;
+      border-radius: 8px;
+      padding: 12px;
+      border: 1px solid #2a4030;
+    }
+    .result-box .label { color: var(--muted); font-size: 0.8rem; margin-bottom: 4px; }
+    .result-box .value { font-size: 1.5rem; font-weight: 700; color: var(--accent); font-family: Consolas, monospace; }
+    .result-box .unit { color: var(--muted); font-size: 0.85rem; margin-left: 4px; }
+    .result-box .sub { color: var(--muted); font-size: 0.78rem; margin-top: 4px; }
+
+    .corner-table { width: 100%; border-collapse: collapse; font-family: Consolas, monospace; font-size: 0.85rem; }
+    .corner-table th {
+      color: var(--muted);
+      font-weight: 400;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      font-size: 0.78rem;
+    }
+    .corner-table td { padding: 7px 10px; border-bottom: 1px solid #1e2c35; }
+    .corner-table tr.turned td { color: var(--accent); font-weight: 700; }
+    .corner-table .pos { color: var(--warn); }
+    .corner-table .neg { color: #6ecfff; }
+
+    .note-box {
+      background: #1a2433;
+      border: 1px solid #2a3c50;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 12px;
+      line-height: 1.6;
+    }
+    .note-box strong { color: var(--text); }
+
+    .btn {
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: #17a2a420; }
+    .btn.primary { background: var(--accent); color: #fff; }
+    .btn.primary:hover { background: #13898b; }
+
+    .status-ok { color: var(--ok); }
+    .status-warn { color: var(--warn); }
+    .status-err { color: var(--bad); }
+
+    .divider { border: none; border-top: 1px solid var(--line); margin: 16px 0; }
+
+    .info-row { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 8px; }
+    .info-item { font-size: 0.82rem; }
+    .info-item span { color: var(--muted); }
+    .info-item strong { color: var(--text); font-family: Consolas, monospace; }
+
+    @media (max-width: 600px) {
+      .result-grid { grid-template-columns: 1fr; }
+      .corner-grid { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Калибровка шага резьбы</h1>
+  <p class="subtitle">Эмпирически определяет фактический шаг резьбы регулировочных винтов стола по изменению сетки</p>
+
+  <div class="steps">
+
+    <!-- STEP 1: Before mesh -->
+    <div class="card" id="card1">
+      <div class="card-header">
+        <div class="step-badge" id="badge1">1</div>
+        <div class="card-title">Сетка ДО поворота винта</div>
+      </div>
+      <label>Файл конфигурации (.cfg) или экспорт сетки</label>
+      <input type="file" id="fileBefore" accept=".cfg,.txt,.ini" />
+      <div id="selectBefore" style="display:none; margin-top:10px;">
+        <label>Выбрать сетку:</label>
+        <select id="meshBeforeSel" onchange="onMeshBeforeSel()"></select>
+      </div>
+      <div class="mesh-preview" id="previewBefore"></div>
+    </div>
+
+    <!-- STEP 2: Which screw + direction -->
+    <div class="card" id="card2">
+      <div class="card-header">
+        <div class="step-badge pending" id="badge2">2</div>
+        <div class="card-title">Какой винт и в какую сторону</div>
+      </div>
+      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:10px;">
+        Поверните ровно <strong style="color:var(--text)">1 полный оборот</strong> один из четырёх винтов.
+        Укажите который и в каком направлении.
+      </p>
+
+      <label>Угол стола (вид спереди):</label>
+      <div class="corner-grid">
+        <div class="corner-btn corner-rl" id="btn-rl" onclick="selectCorner('rl')">
+          Зад-Лево<br><span class="corner-label">Rear-Left</span>
+        </div>
+        <div class="corner-btn corner-rr" id="btn-rr" onclick="selectCorner('rr')">
+          Зад-Право<br><span class="corner-label">Rear-Right</span>
+        </div>
+        <div class="corner-btn corner-fl" id="btn-fl" onclick="selectCorner('fl')">
+          Перед-Лево<br><span class="corner-label">Front-Left</span>
+        </div>
+        <div class="corner-btn corner-fr" id="btn-fr" onclick="selectCorner('fr')">
+          Перед-Право<br><span class="corner-label">Front-Right</span>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label>Направление поворота:</label>
+        <div class="dir-group">
+          <div class="dir-btn" id="btn-cw" onclick="selectDir('cw')">↻ По часовой (CW)</div>
+          <div class="dir-btn" id="btn-ccw" onclick="selectDir('ccw')">↺ Против часовой (CCW)</div>
+        </div>
+        <p style="color:var(--muted); font-size:0.78rem; margin-top:6px;">
+          На AD5X CW = опускает стол в этом углу (стол становится ниже)
+        </p>
+      </div>
+    </div>
+
+    <!-- STEP 3: After mesh -->
+    <div class="card" id="card3">
+      <div class="card-header">
+        <div class="step-badge pending" id="badge3">3</div>
+        <div class="card-title">Сетка ПОСЛЕ поворота винта</div>
+      </div>
+      <label>Файл конфигурации (.cfg) или экспорт сетки</label>
+      <input type="file" id="fileAfter" accept=".cfg,.txt,.ini" />
+      <div id="selectAfter" style="display:none; margin-top:10px;">
+        <label>Выбрать сетку:</label>
+        <select id="meshAfterSel" onchange="onMeshAfterSel()"></select>
+      </div>
+      <div class="mesh-preview" id="previewAfter"></div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-card" id="resultCard">
+      <div class="result-title">Результаты калибровки</div>
+
+      <div class="result-grid">
+        <div class="result-box">
+          <div class="label">Сырой шаг резьбы</div>
+          <div class="value" id="rawPitch">—</div>
+          <div class="sub" id="rawPitchSub"></div>
+        </div>
+        <div class="result-box">
+          <div class="label">Скорректированный шаг <span title="Вычтено среднее смещение остальных углов">(с компенсацией дрейфа)</span></div>
+          <div class="value" id="corrPitch">—</div>
+          <div class="sub" id="corrPitchSub"></div>
+        </div>
+      </div>
+
+      <table class="corner-table">
+        <thead>
+          <tr>
+            <th>Угол</th>
+            <th>ДО (мм)</th>
+            <th>ПОСЛЕ (мм)</th>
+            <th>Δ (мм)</th>
+            <th>Роль</th>
+          </tr>
+        </thead>
+        <tbody id="cornerTableBody"></tbody>
+      </table>
+
+      <div class="note-box" id="noteBox"></div>
+
+      <hr class="divider" />
+      <div style="font-size:0.85rem; color:var(--muted); margin-bottom:6px;">Сравнить с известными стандартными шагами:</div>
+      <div class="info-row" id="stdPitches"></div>
+    </div>
+
+  </div><!-- /steps -->
+</div><!-- /wrap -->
+
+<script>
+  // ── State ────────────────────────────────────────────────────────────────────
+  const state = {
+    meshBefore: null,
+    meshAfter: null,
+    allBefore: {},
+    allAfter: {},
+    corner: null,     // 'fl','fr','rl','rr'
+    dir: null,        // 'cw','ccw'
+  };
+
+  // ── Corner accessor helpers ──────────────────────────────────────────────────
+  // In mesh.points: row 0 = rear (Y_max), row last = front (Y_min)
+  // col 0 = left (X_min), col last = right (X_max)
+  function getCornerZ(mesh, corner) {
+    const rows = mesh.points;
+    const lastR = rows.length - 1;
+    const lastC = rows[0].length - 1;
+    switch (corner) {
+      case 'fl': return rows[lastR][0];
+      case 'fr': return rows[lastR][lastC];
+      case 'rl': return rows[0][0];
+      case 'rr': return rows[0][lastC];
+    }
+  }
+
+  const cornerLabels = { fl: 'Перед-Лево', fr: 'Перед-Право', rl: 'Зад-Лево', rr: 'Зад-Право' };
+
+  // ── Mesh parser (same logic as mesh-tool.html) ───────────────────────────────
+  function findAllMeshes(text) {
+    const lines = text.split(/\r?\n/).map(ln => ln.trim());
+    const meshes = {};
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].replace(/^#\*#\s*/, '').trim();
+      const match = line.match(/^\[bed_mesh\s*([^\]]*)\]$/);
+      if (!match) continue;
+      const meshName = match[1].trim() || 'default';
+      const mesh = parseMeshBlock(lines, i, meshName);
+      if (mesh) meshes[meshName] = mesh;
+    }
+    return meshes;
+  }
+
+  function parseMeshBlock(lines, startIdx, meshName) {
+    const points = [];
+    let xCount = null, yCount = null;
+    let minX = null, maxX = null, minY = null, maxY = null;
+    let inPoints = false;
+
+    for (let i = startIdx + 1; i < lines.length; i++) {
+      let line = lines[i].replace(/^#\*#\s*/, '').trim();
+      if (!line) continue;
+      if (line.startsWith('[') && i > startIdx + 1) break;
+
+      if (line.startsWith('points')) { inPoints = true; continue; }
+      if (line.startsWith('x_count')) { xCount = parseInt(line.split('=')[1], 10); inPoints = false; continue; }
+      if (line.startsWith('y_count')) { yCount = parseInt(line.split('=')[1], 10); continue; }
+      if (line.startsWith('min_x')) { minX = parseFloat(line.split('=')[1]); continue; }
+      if (line.startsWith('max_x')) { maxX = parseFloat(line.split('=')[1]); continue; }
+      if (line.startsWith('min_y')) { minY = parseFloat(line.split('=')[1]); continue; }
+      if (line.startsWith('max_y')) { maxY = parseFloat(line.split('=')[1]); continue; }
+
+      if (inPoints) {
+        const row = (line.match(/-?\d+(?:\.\d+)?/g) || [])
+          .map(x => parseFloat(x)).filter(v => Number.isFinite(v));
+        if (row.length) points.push(row);
+      }
+    }
+
+    if (!points.length) return null;
+    const flat = points.flat();
+    const avg = flat.reduce((a, b) => a + b, 0) / flat.length;
+    return {
+      name: meshName, points,
+      x_count: xCount || points[0].length,
+      y_count: yCount || points.length,
+      z_min: Math.min(...flat), z_max: Math.max(...flat), z_avg: avg,
+      min_x: Number.isFinite(minX) ? minX : 0,
+      max_x: Number.isFinite(maxX) ? maxX : (points[0].length - 1),
+      min_y: Number.isFinite(minY) ? minY : 0,
+      max_y: Number.isFinite(maxY) ? maxY : (points.length - 1),
+    };
+  }
+
+  // ── File loading ─────────────────────────────────────────────────────────────
+  document.getElementById('fileBefore').addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    f.text().then(txt => {
+      state.allBefore = findAllMeshes(txt);
+      populateSelect('meshBeforeSel', 'selectBefore', state.allBefore, mesh => {
+        state.meshBefore = mesh;
+        renderPreview('previewBefore', mesh);
+        document.getElementById('badge1').classList.add('done');
+        tryCompute();
+      });
+    });
+  });
+
+  document.getElementById('fileAfter').addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    f.text().then(txt => {
+      state.allAfter = findAllMeshes(txt);
+      populateSelect('meshAfterSel', 'selectAfter', state.allAfter, mesh => {
+        state.meshAfter = mesh;
+        renderPreview('previewAfter', mesh);
+        document.getElementById('badge3').classList.add('done');
+        tryCompute();
+      });
+    });
+  });
+
+  function populateSelect(selId, wrapId, meshes, onPick) {
+    const sel = document.getElementById(selId);
+    const wrap = document.getElementById(wrapId);
+    const keys = Object.keys(meshes);
+    if (!keys.length) return;
+
+    sel.innerHTML = '';
+    keys.forEach(k => {
+      const o = document.createElement('option');
+      o.value = k; o.textContent = k;
+      sel.appendChild(o);
+    });
+
+    if (keys.length > 1) {
+      wrap.style.display = 'block';
+    } else {
+      wrap.style.display = 'none';
+    }
+
+    onPick(meshes[keys[0]]);
+    sel._onPick = onPick;
+    sel._meshes = meshes;
+  }
+
+  function onMeshBeforeSel() {
+    const sel = document.getElementById('meshBeforeSel');
+    const mesh = sel._meshes[sel.value];
+    state.meshBefore = mesh;
+    renderPreview('previewBefore', mesh);
+    tryCompute();
+  }
+
+  function onMeshAfterSel() {
+    const sel = document.getElementById('meshAfterSel');
+    const mesh = sel._meshes[sel.value];
+    state.meshAfter = mesh;
+    renderPreview('previewAfter', mesh);
+    tryCompute();
+  }
+
+  // ── Preview ──────────────────────────────────────────────────────────────────
+  function renderPreview(id, mesh) {
+    const el = document.getElementById(id);
+    el.classList.add('visible');
+    const corners = ['fl','fr','rl','rr'];
+    const vals = Object.fromEntries(corners.map(c => [c, getCornerZ(mesh, c)]));
+    const allV = Object.values(vals);
+    const hi = Math.max(...allV), lo = Math.min(...allV);
+
+    function valSpan(v) {
+      let cls = 'corner-val';
+      if (v === hi) cls += ' hi';
+      if (v === lo) cls += ' lo';
+      return `<span class="${cls}">${v.toFixed(4)}</span>`;
+    }
+
+    el.innerHTML = `
+      <table style="border-collapse:collapse; width:100%; text-align:center;">
+        <tr>
+          <td style="padding:4px 10px;">${valSpan(vals.rl)}<br><span style="font-size:0.72rem">Зад-Лево</span></td>
+          <td style="padding:4px 10px;">${valSpan(vals.rr)}<br><span style="font-size:0.72rem">Зад-Право</span></td>
+        </tr>
+        <tr>
+          <td style="padding:4px 10px;">${valSpan(vals.fl)}<br><span style="font-size:0.72rem">Перед-Лево</span></td>
+          <td style="padding:4px 10px;">${valSpan(vals.fr)}<br><span style="font-size:0.72rem">Перед-Право</span></td>
+        </tr>
+      </table>
+      <div style="margin-top:6px; color:var(--muted);">
+        Сетка: <strong style="color:var(--text)">${mesh.name}</strong> &nbsp;|&nbsp;
+        ${mesh.y_count}×${mesh.x_count} &nbsp;|&nbsp;
+        Range: <strong style="color:var(--text)">${(mesh.z_max - mesh.z_min).toFixed(4)} мм</strong> &nbsp;|&nbsp;
+        Avg: <strong style="color:var(--text)">${mesh.z_avg.toFixed(4)} мм</strong>
+      </div>`;
+  }
+
+  // ── Corner / direction selection ─────────────────────────────────────────────
+  function selectCorner(c) {
+    ['fl','fr','rl','rr'].forEach(id => {
+      document.getElementById('btn-'+id).classList.toggle('selected', id === c);
+    });
+    state.corner = c;
+    document.getElementById('badge2').classList.remove('pending');
+    document.getElementById('badge2').classList.add('done');
+    tryCompute();
+  }
+
+  function selectDir(d) {
+    document.getElementById('btn-cw').classList.toggle('selected', d === 'cw');
+    document.getElementById('btn-ccw').classList.toggle('selected', d === 'ccw');
+    state.dir = d;
+    tryCompute();
+  }
+
+  // ── Compute ──────────────────────────────────────────────────────────────────
+  function tryCompute() {
+    if (!state.meshBefore || !state.meshAfter || !state.corner || !state.dir) return;
+    compute(state.meshBefore, state.meshAfter, state.corner, state.dir);
+  }
+
+  function compute(before, after, corner, dir) {
+    const allCorners = ['fl','fr','rl','rr'];
+    const otherCorners = allCorners.filter(c => c !== corner);
+
+    // Z at each corner before/after
+    const beforeVals = Object.fromEntries(allCorners.map(c => [c, getCornerZ(before, c)]));
+    const afterVals  = Object.fromEntries(allCorners.map(c => [c, getCornerZ(after, c)]));
+    const deltas     = Object.fromEntries(allCorners.map(c => [c, afterVals[c] - beforeVals[c]]));
+
+    const rawDelta = deltas[corner];
+
+    // Drift: average of other 3 corners
+    const otherDeltas = otherCorners.map(c => deltas[c]);
+    const drift = otherDeltas.reduce((a,b) => a+b, 0) / otherDeltas.length;
+    const corrDelta = rawDelta - drift;
+
+    // Drift quality metrics
+    const driftRange = Math.max(...otherDeltas) - Math.min(...otherDeltas);
+    const driftVariance = otherDeltas.reduce((a, d) => a + (d - drift)**2, 0) / otherDeltas.length;
+    const driftStdDev = Math.sqrt(driftVariance);
+    // SNR: |signal| / std_dev of reference noise (higher = more reliable)
+    const snr = driftStdDev > 0.0001 ? Math.abs(corrDelta) / driftStdDev : Infinity;
+
+    // Quality tiers:
+    // GOOD: driftRange < 0.05 mm AND snr > 3
+    // MARGINAL: driftRange < 0.15 mm AND snr > 1
+    // BAD: otherwise — meshes likely incomparable
+    let qualityTier; // 'good' | 'marginal' | 'bad'
+    if (driftRange < 0.05 && snr > 3) qualityTier = 'good';
+    else if (driftRange < 0.15 && snr > 1) qualityTier = 'marginal';
+    else qualityTier = 'bad';
+
+    const rawPitch   = Math.abs(rawDelta);
+    const corrPitch  = Math.abs(corrDelta);
+
+    const expectedSign = (dir === 'cw') ? -1 : 1;
+    const actualSign = Math.sign(corrDelta);
+    const signOk = actualSign === expectedSign || Math.abs(corrDelta) < 0.001;
+
+    const stdPitches = [
+      { label: 'M5 стандарт', val: 0.8 },
+      { label: 'M4 стандарт', val: 0.7 },
+      { label: 'M3 стандарт', val: 0.5 },
+      { label: 'M5 мелкий', val: 0.5 },
+    ];
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    const result = document.getElementById('resultCard');
+    result.classList.add('visible');
+
+    // Quality banner — insert/update before the title
+    let qBanner = document.getElementById('qualityBanner');
+    if (!qBanner) {
+      qBanner = document.createElement('div');
+      qBanner.id = 'qualityBanner';
+      qBanner.style.cssText = 'border-radius:8px; padding:12px 14px; margin-bottom:14px; font-size:0.88rem; line-height:1.6;';
+      result.insertBefore(qBanner, result.firstChild);
+    }
+
+    if (qualityTier === 'good') {
+      qBanner.style.background = '#1a2e1e'; qBanner.style.border = '1px solid #3a6040'; qBanner.style.color = '#a8e6ba';
+      qBanner.innerHTML = `<strong style="color:var(--ok)">✓ Измерение надёжно</strong> — 
+        дрейф опорных углов однородный (разброс ${(driftRange*1000).toFixed(1)} мкм, σ = ${(driftStdDev*1000).toFixed(1)} мкм), 
+        SNR = ${snr.toFixed(1)}.`;
+    } else if (qualityTier === 'marginal') {
+      qBanner.style.background = '#2a2010'; qBanner.style.border = '1px solid #6a5020'; qBanner.style.color = '#f0c070';
+      qBanner.innerHTML = `<strong style="color:var(--warn)">⚠ Умеренное качество</strong> — 
+        разброс дрейфа опорных углов: ${(driftRange*1000).toFixed(0)} мкм, σ = ${(driftStdDev*1000).toFixed(0)} мкм, SNR = ${snr.toFixed(1)}. 
+        Результат ориентировочный. Для точности: убедитесь что температура стола одинакова до/после.`;
+    } else {
+      qBanner.style.background = '#2a1010'; qBanner.style.border = '1px solid #6a2020'; qBanner.style.color = '#f08080';
+      qBanner.innerHTML = `<strong style="color:var(--bad)">✗ Сетки несопоставимы</strong> — 
+        разброс дрейфа опорных углов слишком велик: <strong>${(driftRange*1000).toFixed(0)} мкм</strong> 
+        (мин. ${fmt(Math.min(...otherDeltas))}, макс. ${fmt(Math.max(...otherDeltas))}, σ = ${(driftStdDev*1000).toFixed(0)} мкм). 
+        SNR = <strong>${isFinite(snr) ? snr.toFixed(2) : '∞'}</strong> (нужно > 3).<br>
+        <strong>Результаты ниже недостоверны.</strong> Причины: 
+        разная температура стола, другой профиль сетки, сетки не из одного сеанса, 
+        или была произведена повторная нивелировка между измерениями.<br>
+        <strong>Как исправить:</strong> прогрейте стол до одинаковой температуры, 
+        сделайте <code>BED_MESH_CALIBRATE</code> → сохраните → повернуть винт → 
+        снова <code>BED_MESH_CALIBRATE</code> → сохранить → загрузить оба файла.`;
+    }
+
+    // Big values
+    const pitchColor = qualityTier === 'bad' ? 'var(--bad)' : qualityTier === 'marginal' ? 'var(--warn)' : 'var(--accent)';
+    document.getElementById('rawPitch').innerHTML =
+      rawPitch < 0.001
+        ? '<span class="status-err">Нет изменения</span>'
+        : `<span style="color:${pitchColor}">${rawPitch.toFixed(4)}</span><span class="unit">мм/об</span>`;
+    document.getElementById('rawPitchSub').textContent =
+      `Δ в углу ${cornerLabels[corner]}: ${fmt(rawDelta)} мм`;
+
+    document.getElementById('corrPitch').innerHTML =
+      corrPitch < 0.001
+        ? '<span class="status-err">Нет изменения</span>'
+        : `<span style="color:${pitchColor}">${corrPitch.toFixed(4)}</span><span class="unit">мм/об</span>`;
+    document.getElementById('corrPitchSub').textContent =
+      `Drift avg: ${fmt(drift)} мм | σ: ${(driftStdDev*1000).toFixed(1)} мкм | range: ${(driftRange*1000).toFixed(1)} мкм`;
+
+    // Corner table — add colour coding by delta magnitude
+    const allDeltaVals = Object.values(deltas);
+    const maxAbsDelta = Math.max(...allDeltaVals.map(Math.abs));
+    const tbody = document.getElementById('cornerTableBody');
+    tbody.innerHTML = '';
+    allCorners.forEach(c => {
+      const isTurned = c === corner;
+      const d = deltas[c];
+      const dCls = d > 0.0005 ? 'pos' : d < -0.0005 ? 'neg' : '';
+      // Flag if reference corner moved more than the turned corner — anomaly
+      const isAnomaly = !isTurned && Math.abs(d) > Math.abs(rawDelta) + 0.01;
+      const role = isTurned
+        ? `<strong style="color:var(--accent)">⟵ ПОВЁРНУТ (${dir === 'cw' ? 'CW ↻' : 'CCW ↺'})</strong>`
+        : isAnomaly
+          ? `<span style="color:var(--bad)">⚠ аномальный дрейф</span>`
+          : `<span style="color:var(--muted)">опорный</span>`;
+      tbody.innerHTML += `
+        <tr class="${isTurned ? 'turned' : ''}">
+          <td>${cornerLabels[c]}</td>
+          <td>${beforeVals[c].toFixed(5)}</td>
+          <td>${afterVals[c].toFixed(5)}</td>
+          <td class="${dCls}">${fmt(d)}</td>
+          <td>${role}</td>
+        </tr>`;
+    });
+
+    // Note
+    let noteHtml = '';
+    if (!signOk && Math.abs(corrDelta) > 0.01) {
+      noteHtml += `<span class="status-err"><strong>⚠ Направление не совпадает с ожидаемым</strong></span> — 
+        для AD5X CW должен опускать угол (δ отрицательный). 
+        Проверьте, правильно ли указан угол и направление.<br>`;
+    }
+
+    if (qualityTier !== 'bad') {
+      const closest = stdPitches.reduce((best, s) =>
+        Math.abs(s.val - corrPitch) < Math.abs(best.val - corrPitch) ? s : best);
+      const matchPct = corrPitch > 0.001 ? Math.abs(corrPitch - closest.val) / closest.val * 100 : 100;
+
+      if (corrPitch < 0.01) {
+        noteHtml += `<span class="status-err"><strong>Слишком малое изменение.</strong></span> 
+          Убедитесь, что между сетками был сделан ровно 1 полный оборот.`;
+      } else if (matchPct < 5) {
+        noteHtml += `<span class="status-ok"><strong>Хорошее совпадение:</strong></span> 
+          шаг <strong>${corrPitch.toFixed(4)} мм</strong> ≈ ${closest.label} (${closest.val} мм), 
+          отклонение ${matchPct.toFixed(1)}%.`;
+      } else if (matchPct < 15) {
+        noteHtml += `<span class="status-warn"><strong>Умеренное совпадение:</strong></span> 
+          шаг <strong>${corrPitch.toFixed(4)} мм</strong>, ближайший стандарт: 
+          ${closest.label} (${closest.val} мм), отклонение ${matchPct.toFixed(1)}%.`;
+      } else {
+        noteHtml += `<span class="status-warn"><strong>Нет совпадения со стандартными шагами.</strong></span> 
+          Измеренный шаг: <strong>${corrPitch.toFixed(4)} мм</strong>.`;
+      }
+    } else {
+      noteHtml += `<span style="color:var(--muted)">Сравнение с эталонными шагами недоступно — качество измерения неудовлетворительное.</span>`;
+    }
+
+    document.getElementById('noteBox').innerHTML = noteHtml;
+
+    // Standard pitch comparison
+    const spEl = document.getElementById('stdPitches');
+    spEl.innerHTML = stdPitches.map(s => {
+      const diff = corrPitch > 0.001 ? corrPitch - s.val : null;
+      const diffStr = diff !== null ? ` (${diff >= 0 ? '+' : ''}${diff.toFixed(4)})` : '';
+      const cl = diff !== null && Math.abs(diff / s.val) < 0.05 ? 'status-ok' : 'status-warn';
+      return `<div class="info-item ${cl}"><span>${s.label}:</span> <strong>${s.val} мм${diffStr}</strong></div>`;
+    }).join('');
+  }
+
+  function fmt(v) {
+    const s = v >= 0 ? '+' : '';
+    return s + v.toFixed(5);
+  }
+</script>
+</body>
+</html>

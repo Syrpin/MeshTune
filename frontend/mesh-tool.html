@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bed Mesh Tool</title>
+  <style>
+    :root {
+      --bg: #0e1418;
+      --panel: #182128;
+      --panel-2: #22303a;
+      --text: #e6f1f5;
+      --muted: #9ab0b8;
+      --accent: #17a2a4;
+      --warn: #ef9f52;
+      --ok: #49b56f;
+      --bad: #d35a5a;
+      --line: #2f404c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: radial-gradient(circle at 5% 10%, #1a242c 0%, var(--bg) 40%), linear-gradient(150deg, #0e1418, #101c23 45%, #0f1b22);
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    h1 {
+      margin: 4px 0 10px;
+      font-size: 1.35rem;
+      letter-spacing: 0.02em;
+    }
+    .hint {
+      color: var(--muted);
+      margin-bottom: 14px;
+      font-size: 0.95rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border: 1px solid #36505d;
+      border-radius: 999px;
+      background: #102028;
+      color: #b8d4dd;
+      font-size: 0.8rem;
+      margin-right: 6px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .card {
+      background: linear-gradient(170deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .row label {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .file-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      align-items: center;
+      column-gap: 8px;
+      row-gap: 0;
+    }
+    .file-row label {
+      white-space: nowrap;
+    }
+    .file-row #cfgFile {
+      width: 100%;
+      min-width: 0;
+    }
+    .file-row #cfgFile2 {
+      width: 100%;
+      min-width: 0;
+    }
+    .file-row #copyBtn,
+    .file-row #csvBtn {
+      white-space: nowrap;
+      padding: 7px 10px;
+      font-size: 0.86rem;
+    }
+    .control {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .metrics-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: nowrap;
+      align-items: center;
+    }
+    .metrics-row .control {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .metrics-row .control label {
+      white-space: nowrap;
+    }
+    .metrics-row .control select,
+    .metrics-row .control input[type="number"] {
+      width: 100%;
+      min-width: 0;
+    }
+    input[type="file"], select, input[type="number"] {
+      background: #0f171c;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px 9px;
+    }
+    button {
+      background: linear-gradient(120deg, #0f7f8d, var(--accent));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { filter: brightness(1.07); }
+    button.secondary {
+      background: #2a3944;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+      max-width: 100%;
+      background: #111920;
+      border: none;
+      border-radius: 0;
+      display: block;
+      flex: 0 0 auto;
+    }
+    .viz-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .viz-block {
+      width: 100%;
+      margin-top: 8px;
+      min-height: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    th, td {
+      border-bottom: 1px solid #32424d;
+      text-align: left;
+      padding: 7px;
+    }
+    th { color: var(--muted); font-weight: 600; }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .mono {
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.9rem;
+      background: #111920;
+      border: 1px solid #2f404c;
+      border-radius: 8px;
+      padding: 8px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .kpi {
+      border: 1px solid #32424d;
+      border-radius: 8px;
+      background: #10191f;
+      padding: 8px;
+    }
+    .kpi .name {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .kpi .val {
+      font-size: 1rem;
+      margin-top: 2px;
+      font-weight: 600;
+    }
+    .canvas-title {
+      color: var(--muted);
+      margin: 8px 0 6px;
+      font-size: 0.88rem;
+    }
+    .mesh-table-wrap {
+      border: 1px solid #31424f;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #111920;
+      flex: 1 1 0;
+      min-height: 0;
+      height: 0;
+    }
+    .mesh-table {
+      width: 100%;
+      height: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.86rem;
+    }
+    .mesh-table td {
+      padding: 0 6px;
+      text-align: center;
+      border: 1px solid #2e404b;
+      color: #081116;
+      font-weight: 600;
+    }
+    .hidden { display: none !important; }
+    .copyright {
+      margin-top: 14px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+      opacity: 0.9;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .split { grid-template-columns: 1fr; }
+      .compare-grid { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .metrics-row { flex-wrap: wrap; }
+      .metrics-row .control { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Bed Mesh Tool</h1>
+    <div class="hint">Загрузите один или несколько конфигурационных файлов (.cfg/.txt/.log). Инструмент поддерживает совместную загрузку printer.cfg и printer.base.cfg и выбирает приоритетный источник mesh автоматически.</div>
+
+    <div class="grid">
+      <section class="card viz-card">
+        <div class="row file-row">
+          <label>Файлы конфигурации:</label>
+          <input id="cfgFile" type="file" accept=".cfg,.txt,.log" multiple />
+          <button id="copyBtn" class="secondary">Копировать отчет</button>
+          <button id="csvBtn" class="secondary">CSV</button>
+        </div>
+
+        <div class="row">
+          <span id="printerNameBadge" class="badge">Принтер: не определен</span>
+          <span id="sourceBadge" class="badge">Источник mesh: -</span>
+          <span id="threadBadge" class="badge">Резьба: -</span>
+        </div>
+
+        <div class="row" id="meshSelectRow" style="display:none;">
+          <label>Выберите mesh:</label>
+          <select id="meshSelect"></select>
+        </div>
+
+        <div class="row metrics-row">
+          <span class="control">
+            <label>Шаг винта (мм/оборот):</label>
+            <select id="pitch">
+              <option value="0.5" selected>0.5</option>
+              <option value="0.7">0.7</option>
+              <option value="0.8">0.8</option>
+              <option value="1.0">1.0</option>
+            </select>
+          </span>
+          <span class="control">
+            <label>Сопло (мм):</label>
+            <select id="nozzleDia">
+              <option value="">—</option>
+              <option value="0.2">0.2</option>
+              <option value="0.4" selected>0.4</option>
+              <option value="0.6">0.6</option>
+              <option value="0.8">0.8</option>
+            </select>
+          </span>
+          <span class="control">
+            <label>Допуск (мм):</label>
+            <input id="tolerance" type="number" value="0.15" min="0" step="0.01" />
+          </span>
+        </div>
+
+        <div class="row">
+          <span class="control">
+            <label>Механика винта:</label>
+            <select id="mechDirectionPrimary">
+              <option value="right" selected>закрутить</option>
+              <option value="left">открутить</option>
+            </select>
+            <select id="mechTargetRight">
+              <option value="closer" selected>ближе к соплу</option>
+              <option value="farther">дальше от сопла</option>
+            </select>
+          </span>
+        </div>
+
+        <div class="row">
+          <span class="control">
+            <label>Визуализация:</label>
+            <select id="vizMode">
+              <option value="heatmap" selected>Heatmap (canvas)</option>
+              <option value="table">Table (HTML)</option>
+            </select>
+          </span>
+          <span class="control">
+            <label>Расчет винтов:</label>
+            <select id="screwMode">
+              <option value="plane" selected>по наклону плоскости</option>
+              <option value="raw">по сырым углам</option>
+            </select>
+          </span>
+        </div>
+
+        <div class="viz-block">
+          <canvas id="combinedCanvas" width="560" height="560"></canvas>
+          <div id="combinedTableWrap" class="mesh-table-wrap hidden"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3 style="margin:0 0 8px;">Расчет винтов</h3>
+        <table id="screwTable">
+          <thead>
+            <tr>
+              <th>Угол</th>
+              <th>Delta, мм</th>
+              <th>Обороты</th>
+              <th>Градусы</th>
+              <th>Направл.</th>
+              <th>Действие</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="balanceHint" class="hint" style="margin-top: 8px;"></div>
+
+        <h3 style="margin:14px 0 8px;">Рекомендация за один проход</h3>
+        <div id="stepProgramOut" class="mono">-</div>
+        <div id="screwWarnOut" class="mono" style="margin-top:6px;display:none;border-color:var(--warn);color:var(--warn);"></div>
+        <details style="margin-top:10px;">
+          <summary style="cursor:pointer;font-weight:600;color:var(--muted);user-select:none;">Чек-лист перед регулировкой</summary>
+          <div class="mono" style="margin-top:6px;font-size:0.85rem;">До начала:
+□ Прогреть стол 10+ мин до рабочей температуры
+□ Проверить чистоту и плоскостность покрытия стола
+□ Убедиться в отсутствии люфтов в каретках и винтах
+□ Зафиксировать раму в рабочем положении
+
+После регулировки:
+□ Не затягивать винты до упора — оставить 10–20% хода
+□ Переснять mesh только после стабилизации температуры
+□ Сравнить с предыдущим mesh в 2-pass режиме
+
+Когда остановиться:
+→ Residual RMS &lt; 0.08 мм и все |residual| &lt; tolerance
+→ Включить программную mesh-компенсацию (BED_MESH_CALIBRATE)</div>
+        </details>
+
+        <h3 style="margin:14px 0 8px;">Модель линейности и деформации</h3>
+        <div id="modelOut" class="mono">-</div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="name">Остаток PV</div><div id="kpiPv" class="val">-</div></div>
+          <div class="kpi"><div class="name">Остаток RMS</div><div id="kpiRms" class="val">-</div></div>
+          <div class="kpi"><div class="name">Скручивание</div><div id="kpiTwist" class="val">-</div></div>
+          <div class="kpi"><div class="name">Оценка планарности</div><div id="kpiPlanarity" class="val">-</div></div>
+        </div>
+      </section>
+
+      <section class="card" style="grid-column: 1 / -1;">
+        <h3 id="meshStats" style="margin:0;">Нет данных.</h3>
+      </section>
+
+      <section class="card" style="grid-column: 1 / -1;">
+        <h3 style="margin:0 0 8px;">Сравнение с 2-м mesh (до/после)</h3>
+        <div class="row file-row" style="margin-bottom: 12px;">
+          <label>Загрузите второй файл:</label>
+          <input id="cfgFile2" type="file" accept=".cfg,.txt,.log" />
+        </div>
+        <div class="compare-grid">
+          <div>
+            <canvas id="compareCanvas" width="560" height="560"></canvas>
+          </div>
+          <div>
+            <div id="compareOut" class="mono">Второй файл не загружен.</div>
+            <details style="margin-top:14px;">
+              <summary style="cursor:pointer;font-weight:600;font-size:1rem;color:var(--text);user-select:none;">Сырые данные</summary>
+              <div id="rawOut" class="mono" style="margin-top:8px;">-</div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <div class="copyright">Copyright © Eduard Syrpin</div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      meshA: null,
+      meshB: null,
+      modelA: null,
+      modelB: null,
+      reportText: "",
+      allMeshes: {},
+      meshSource: null,
+      meshSourceB: null,
+      printerName: null,
+      screwThread: null,
+    };
+
+    const corners = [
+      { key: "front_left", label: "FL" },
+      { key: "front_right", label: "FR" },
+      { key: "rear_left", label: "RL" },
+      { key: "rear_right", label: "RR" },
+    ];
+
+    function fmt(n, d = 3) {
+      return Number.isFinite(n) ? n.toFixed(d) : "-";
+    }
+
+    function cleanCfgLine(line) {
+      return line.replace(/^#\*#\s*/, "").trim();
+    }
+
+    function threadToPitch(thread) {
+      if (!thread) return null;
+      const m = String(thread).match(/M(\d+)/i);
+      if (!m) return null;
+      const size = Number(m[1]);
+      if (size === 3) return "0.5";
+      if (size === 4) return "0.7";
+      if (size === 5) return "0.8";
+      if (size === 6) return "1.0";
+      return null;
+    }
+
+    function formatThreadBadge(thread) {
+      if (!thread) return "-";
+      const t = String(thread).toUpperCase();
+      if (/\bM\d+/.test(t)) return `${thread} (metric)`;
+      if (/\b(UNC|UNF|BSW|BSP|G\d|NPT|#\d|\d+\/\d+)\b/.test(t)) return `${thread} (imperial)`;
+      return thread;
+    }
+
+    function parsePrinterMeta(text, fileName) {
+      const lines = text.split(/\r?\n/);
+      let inPrinter = false;
+      let kinematics = null;
+      let screwThread = null;
+      let commentName = null;
+
+      for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i];
+        const line = cleanCfgLine(raw);
+        if (!line) continue;
+
+        if (!commentName && raw.trim().startsWith("#")) {
+          const c = raw.replace(/^\s*#\s?/, "").trim();
+          if (/(Creality|Sovol|Artillery|RatRig|Bambu|Prusa|Anycubic|Elegoo|Flashforge|Ender|CR-\d|SV\d|Voron)/i.test(c)) {
+            commentName = c.replace(/^This file contains\s+/i, "").replace(/\.$/, "");
+          }
+        }
+
+        if (/^\[printer\]$/i.test(line)) {
+          inPrinter = true;
+          continue;
+        }
+        if (line.startsWith("[")) {
+          inPrinter = false;
+        }
+
+        if (inPrinter) {
+          const km = line.match(/^kinematics\s*[:=]\s*(.+)$/i);
+          if (km) kinematics = km[1].trim();
+        }
+
+        const sm = line.match(/^screw_thread\s*[:=]\s*([A-Z]+-M\d+)/i);
+        if (sm && !screwThread) screwThread = sm[1].toUpperCase();
+      }
+
+      const baseName = (fileName || "").replace(/\.[^/.]+$/, "");
+      const fallbackName = baseName || "Unknown printer";
+      const printerName = commentName || fallbackName;
+      return { printerName, kinematics, screwThread };
+    }
+
+    function mergeMeshSources(fileEntries) {
+      const entries = fileEntries.map((f) => {
+        const meshes = findAllMeshes(f.text || "");
+        const meta = parsePrinterMeta(f.text || "", f.name || "");
+        return {
+          ...f,
+          meshes,
+          meshCount: Object.keys(meshes).length,
+          meta,
+        };
+      });
+
+      let chosen = null;
+      const printerCfg = entries.find((e) => (e.name || "").toLowerCase() === "printer.cfg");
+      const baseCfg = entries.find((e) => (e.name || "").toLowerCase() === "printer.base.cfg");
+
+      if (printerCfg && printerCfg.meshCount > 0) {
+        chosen = printerCfg;
+        if (baseCfg && baseCfg.meshCount > 0) {
+          chosen = (printerCfg.lastModified || 0) >= (baseCfg.lastModified || 0) ? printerCfg : baseCfg;
+        }
+      } else if (baseCfg && baseCfg.meshCount > 0) {
+        chosen = baseCfg;
+      } else {
+        chosen = entries.find((e) => e.meshCount > 0) || null;
+      }
+
+      return { entries, chosen };
+    }
+
+    function updateSourceBadges({ printerName, sourceName, screwThread, kinematics }) {
+      const p = document.getElementById("printerNameBadge");
+      const s = document.getElementById("sourceBadge");
+      const t = document.getElementById("threadBadge");
+
+      const printerLabel = kinematics ? `${printerName} (${kinematics})` : (printerName || "не определен");
+      p.textContent = `Принтер: ${printerLabel}`;
+      s.textContent = `Источник mesh: ${sourceName || "-"}`;
+      t.textContent = `Резьба: ${formatThreadBadge(screwThread)}`;
+    }
+
+    function findAllMeshes(text) {
+      const lines = text.split(/\r?\n/).map((ln) => ln.trim());
+      const meshes = {};
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        line = cleanCfgLine(line);
+
+        // Match [bed_mesh NAME] or [bed_mesh]
+        const match = line.match(/^\[bed_mesh\s*([^\]]*)\]$/);
+        if (!match) continue;
+
+        const meshName = match[1].trim() || "default";
+        const mesh = parseMeshBlock(lines, i, meshName);
+        if (mesh) {
+          meshes[meshName] = mesh;
+        }
+      }
+
+      return meshes;
+    }
+
+    function parseMeshBlock(lines, startIdx, meshName) {
+      const points = [];
+      let xCount = null;
+      let yCount = null;
+      let minX = null;
+      let maxX = null;
+      let minY = null;
+      let maxY = null;
+      let inPoints = false;
+
+      for (let i = startIdx + 1; i < lines.length; i++) {
+        let line = lines[i];
+        line = cleanCfgLine(line);
+        if (!line) continue;
+
+        if (line.startsWith("[") && i > startIdx + 1) {
+          break;
+        }
+
+        if (line.startsWith("points")) {
+          inPoints = true;
+          continue;
+        }
+
+        if (line.startsWith("x_count")) { xCount = parseInt(line.split("=")[1], 10); inPoints = false; continue; }
+        if (line.startsWith("y_count")) { yCount = parseInt(line.split("=")[1], 10); continue; }
+        if (line.startsWith("min_x")) { minX = parseFloat(line.split("=")[1]); continue; }
+        if (line.startsWith("max_x")) { maxX = parseFloat(line.split("=")[1]); continue; }
+        if (line.startsWith("min_y")) { minY = parseFloat(line.split("=")[1]); continue; }
+        if (line.startsWith("max_y")) { maxY = parseFloat(line.split("=")[1]); continue; }
+
+        if (inPoints) {
+          const row = (line.match(/-?\d+(?:\.\d+)?/g) || [])
+            .map((x) => parseFloat(x))
+            .filter((v) => Number.isFinite(v));
+          if (row.length) points.push(row);
+        }
+      }
+
+      if (!points.length) return null;
+
+      const flat = points.flat();
+      const avg = flat.reduce((a, b) => a + b, 0) / flat.length;
+      const mesh = {
+        name: meshName,
+        points,
+        x_count: xCount || points[0].length,
+        y_count: yCount || points.length,
+        z_min: Math.min(...flat),
+        z_max: Math.max(...flat),
+        z_avg: avg,
+        min_x: Number.isFinite(minX) ? minX : 0,
+        max_x: Number.isFinite(maxX) ? maxX : (points[0].length - 1),
+        min_y: Number.isFinite(minY) ? minY : 0,
+        max_y: Number.isFinite(maxY) ? maxY : (points.length - 1),
+      };
+      mesh.z_range = mesh.z_max - mesh.z_min;
+      mesh.corners = {
+        front_left: points[0][0],
+        front_right: points[0][points[0].length - 1],
+        rear_left: points[points.length - 1][0],
+        rear_right: points[points.length - 1][points[0].length - 1],
+      };
+      return mesh;
+    }
+
+    function parseMesh(text) {
+      const meshes = findAllMeshes(text);
+      if (!Object.keys(meshes).length) return null;
+      return meshes;
+    }
+
+    function solve3x3(A, b) {
+      const m = [
+        [A[0][0], A[0][1], A[0][2], b[0]],
+        [A[1][0], A[1][1], A[1][2], b[1]],
+        [A[2][0], A[2][1], A[2][2], b[2]],
+      ];
+
+      for (let i = 0; i < 3; i++) {
+        let pivot = i;
+        for (let r = i + 1; r < 3; r++) {
+          if (Math.abs(m[r][i]) > Math.abs(m[pivot][i])) pivot = r;
+        }
+        if (Math.abs(m[pivot][i]) < 1e-12) return null;
+        if (pivot !== i) {
+          const t = m[i];
+          m[i] = m[pivot];
+          m[pivot] = t;
+        }
+
+        const div = m[i][i];
+        for (let c = i; c < 4; c++) m[i][c] /= div;
+
+        for (let r = 0; r < 3; r++) {
+          if (r === i) continue;
+          const factor = m[r][i];
+          for (let c = i; c < 4; c++) {
+            m[r][c] -= factor * m[i][c];
+          }
+        }
+      }
+
+      return [m[0][3], m[1][3], m[2][3]];
+    }
+
+    function fitPlaneModel(mesh) {
+      const rows = mesh.points.length;
+      const cols = mesh.points[0].length;
+      const xStep = cols > 1 ? (mesh.max_x - mesh.min_x) / (cols - 1) : 1;
+      const yStep = rows > 1 ? (mesh.max_y - mesh.min_y) / (rows - 1) : 1;
+
+      let sxx = 0, syy = 0, sxy = 0, sx = 0, sy = 0;
+      let sxz = 0, syz = 0, sz = 0;
+      const n = rows * cols;
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const xx = mesh.min_x + x * xStep;
+          const yy = mesh.min_y + y * yStep;
+          const zz = mesh.points[y][x];
+          sx += xx;
+          sy += yy;
+          sz += zz;
+          sxx += xx * xx;
+          syy += yy * yy;
+          sxy += xx * yy;
+          sxz += xx * zz;
+          syz += yy * zz;
+        }
+      }
+
+      const A = [
+        [sxx, sxy, sx],
+        [sxy, syy, sy],
+        [sx, sy, n],
+      ];
+      const B = [sxz, syz, sz];
+      const solved = solve3x3(A, B);
+      if (!solved) return null;
+      const [a, b, c] = solved;
+
+      const plane = [];
+      const residuals = [];
+      const residualFlat = [];
+      for (let y = 0; y < rows; y++) {
+        const prow = [];
+        const rrow = [];
+        for (let x = 0; x < cols; x++) {
+          const xx = mesh.min_x + x * xStep;
+          const yy = mesh.min_y + y * yStep;
+          const zzFit = a * xx + b * yy + c;
+          const rr = mesh.points[y][x] - zzFit;
+          prow.push(zzFit);
+          rrow.push(rr);
+          residualFlat.push(rr);
+        }
+        plane.push(prow);
+        residuals.push(rrow);
+      }
+
+      const rMin = Math.min(...residualFlat);
+      const rMax = Math.max(...residualFlat);
+      const rPv = rMax - rMin;
+      const rRms = Math.sqrt(residualFlat.reduce((s, v) => s + v * v, 0) / residualFlat.length);
+      const rMad = residualFlat.reduce((s, v) => s + Math.abs(v), 0) / residualFlat.length;
+
+      const fl = residuals[0][0];
+      const fr = residuals[0][cols - 1];
+      const rl = residuals[rows - 1][0];
+      const rr = residuals[rows - 1][cols - 1];
+      const twist = ((fl + rr) - (fr + rl)) / 2;
+
+      const xSpan = Math.max(1e-9, mesh.max_x - mesh.min_x);
+      const ySpan = Math.max(1e-9, mesh.max_y - mesh.min_y);
+      const slopeAcrossX = a * xSpan;
+      const slopeAcrossY = b * ySpan;
+
+      let classLabel = "excellent";
+      if (rPv > 0.20) classLabel = "severe_warp";
+      else if (rPv > 0.12) classLabel = "noticeable_warp";
+      else if (rPv > 0.05) classLabel = "moderate_warp";
+
+      const planarityScore = Math.max(0, Math.min(100, Math.round(100 - rPv * 350)));
+
+      const centerX = (mesh.min_x + mesh.max_x) / 2;
+      const centerY = (mesh.min_y + mesh.max_y) / 2;
+      const centerPlane = a * centerX + b * centerY + c;
+
+      const planeCorners = {
+        front_left: a * mesh.min_x + b * mesh.min_y + c,
+        front_right: a * mesh.max_x + b * mesh.min_y + c,
+        rear_left: a * mesh.min_x + b * mesh.max_y + c,
+        rear_right: a * mesh.max_x + b * mesh.max_y + c,
+      };
+
+      return {
+        a, b, c,
+        plane,
+        residuals,
+        residual_min: rMin,
+        residual_max: rMax,
+        residual_pv: rPv,
+        residual_rms: rRms,
+        residual_mad: rMad,
+        twist,
+        slope_across_x: slopeAcrossX,
+        slope_across_y: slopeAcrossY,
+        tilt_x_deg: Math.atan(a) * 180 / Math.PI,
+        tilt_y_deg: Math.atan(b) * 180 / Math.PI,
+        class_label: classLabel,
+        planarity_score: planarityScore,
+        center_plane: centerPlane,
+        plane_corners: planeCorners,
+      };
+    }
+
+    function colorFor(v, vmin, vmax) {
+      if (!Number.isFinite(v)) return "rgb(80,80,80)";
+      const t = (v - vmin) / Math.max(1e-9, (vmax - vmin));
+      const r = Math.round(40 + 205 * t);
+      const g = Math.round(170 - 90 * t);
+      const b = Math.round(220 - 200 * t);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function colorForRaw(v, vmin, vmax) {
+      if (!Number.isFinite(v)) return "rgb(80,80,80)";
+      const t = (v - vmin) / Math.max(1e-9, (vmax - vmin));
+      const r = Math.round(170 + 85 * t);
+      const g = Math.round(30 + 120 * t);
+      const b = Math.round(20 + 10 * t);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function colorForResidual(v, vmin, vmax) {
+      if (!Number.isFinite(v)) return "rgb(80,80,80)";
+      const t = (v - vmin) / Math.max(1e-9, (vmax - vmin));
+      const r = Math.round(20 + 40 * t);
+      const g = Math.round(95 + 125 * t);
+      const b = Math.round(220 - 110 * t);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function drawSplitHeatmap(canvasId, topMatrix, bottomMatrix, topMin, topMax, bottomMin, bottomMax, toleranceBand, labels = {}) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const rows = topMatrix.length;
+      const cols = topMatrix[0].length;
+      const topLabel = labels.top || "Сырой Mesh";
+      const bottomLabel = labels.bottom || "Рассчетная плоскость";
+      const pad = 26;
+      const w = canvas.width - pad * 2;
+      const h = canvas.height - pad * 2;
+      const cellPitch = Math.min(w / cols, h / rows);
+      const cellGap = 4;
+      const cell = cellPitch - cellGap;
+      const gridW = cellPitch * cols;
+      const gridH = cellPitch * rows;
+      const ox = pad + (w - gridW) / 2;
+      const oy = pad + (h - gridH) / 2;
+      ctx.font = "600 12px Consolas, 'Courier New', monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const srcY = rows - 1 - y;
+          const vTop = topMatrix[srcY][x];
+          const vBottom = bottomMatrix[srcY][x];
+          const x0 = ox + x * cellPitch + cellGap / 2;
+          const y0 = oy + y * cellPitch + cellGap / 2;
+          const x1 = x0 + cell;
+          const y1 = y0 + cell;
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y0);
+          ctx.lineTo(x0, y1);
+          ctx.closePath();
+          ctx.fillStyle = colorForRaw(vTop, topMin, topMax);
+          ctx.fill();
+          ctx.restore();
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x1, y0);
+          ctx.lineTo(x0, y1);
+          ctx.closePath();
+          ctx.fillStyle = colorForResidual(vBottom, bottomMin, bottomMax);
+          ctx.fill();
+          ctx.restore();
+
+          ctx.strokeStyle = "rgba(255,255,255,0.25)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x0, y0, cell, cell);
+
+          // Visual split between raw/residual halves: dark base + light highlight.
+          ctx.strokeStyle = "rgba(0,0,0,0.42)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x0, y1);
+          ctx.lineTo(x1, y0);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(255,255,255,0.45)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x0 + 1, y1 - 1);
+          ctx.lineTo(x1 - 1, y0 + 1);
+          ctx.stroke();
+
+          if (Number.isFinite(toleranceBand) && Math.abs(vBottom) > toleranceBand) {
+            ctx.strokeStyle = "rgba(239,159,82,0.95)";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x0 + 1.5, y0 + 1.5, cell - 3, cell - 3);
+          }
+
+          ctx.fillStyle = "#000000";
+          ctx.fillText(vTop.toFixed(2), x0 + cell * 0.34, y0 + cell * 0.30);
+          ctx.fillText(vBottom.toFixed(2), x0 + cell * 0.68, y0 + cell * 0.72);
+        }
+      }
+
+      // Framing: warm border for raw area (top+left), cool border for residual area (right+bottom).
+      const x0 = ox;
+      const y0 = oy;
+      const x1 = ox + gridW;
+      const y1 = oy + gridH;
+      const borderW = 14;
+
+      const warmH = ctx.createLinearGradient(x0, y0, x1, y0);
+      warmH.addColorStop(0, "#c6221a");
+      warmH.addColorStop(1, "#ff8f1f");
+      ctx.fillStyle = warmH;
+      ctx.fillRect(x0 - borderW, y0 - borderW, gridW + borderW, borderW);
+
+      const warmV = ctx.createLinearGradient(x0, y0, x0, y1);
+      warmV.addColorStop(0, "#c6221a");
+      warmV.addColorStop(1, "#ff8f1f");
+      ctx.fillStyle = warmV;
+      ctx.fillRect(x0 - borderW, y0, borderW, gridH + borderW);
+
+      const coolV = ctx.createLinearGradient(x1, y0, x1, y1);
+      coolV.addColorStop(0, "#2288d8");
+      coolV.addColorStop(1, "#28bf68");
+      ctx.fillStyle = coolV;
+      ctx.fillRect(x1, y0 - borderW, borderW, gridH + borderW);
+
+      const coolH = ctx.createLinearGradient(x0, y1, x1, y1);
+      coolH.addColorStop(0, "#2288d8");
+      coolH.addColorStop(1, "#28bf68");
+      ctx.fillStyle = coolH;
+      ctx.fillRect(x0, y1, gridW + borderW, borderW);
+
+      ctx.font = "600 13px Segoe UI";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#000000";
+      ctx.fillText(topLabel, x0 - borderW + 6, y0 - borderW / 2);
+
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#000000";
+      ctx.fillText(bottomLabel, x1 + borderW - 6, y1 + borderW / 2);
+
+    }
+
+    function drawCombinedMesh(mesh, model) {
+      if (!model) return;
+      const maxAbs = Math.max(Math.abs(model.residual_min), Math.abs(model.residual_max));
+      const tol = parseFloat(document.getElementById("tolerance").value) || 0;
+      drawSplitHeatmap(
+        "combinedCanvas",
+        mesh.points,
+        model.residuals,
+        mesh.z_min,
+        mesh.z_max,
+        -maxAbs,
+        maxAbs,
+        tol,
+        { top: "Сырой Mesh", bottom: "Рассчетная плоскость" }
+      );
+    }
+
+    function renderCombinedTable(containerId, topMatrix, bottomMatrix, topMin, topMax, bottomMin, bottomMax) {
+      const container = document.getElementById(containerId);
+      const rows = topMatrix.length;
+      const cols = topMatrix[0].length;
+      let html = '<table class="mesh-table"><tbody>';
+      for (let y = 0; y < rows; y++) {
+        html += "<tr>";
+        for (let x = 0; x < cols; x++) {
+          const srcY = rows - 1 - y;
+          const topVal = topMatrix[srcY][x];
+          const bottomVal = bottomMatrix[srcY][x];
+          const bgTop = colorForRaw(topVal, topMin, topMax);
+          const bgBottom = colorForResidual(bottomVal, bottomMin, bottomMax);
+          html += `<td style="background:linear-gradient(135deg, ${bgTop} 49%, ${bgBottom} 51%);">${topVal.toFixed(2)} | ${bottomVal.toFixed(2)}</td>`;
+        }
+        html += "</tr>";
+      }
+      html += "</tbody></table>";
+      container.innerHTML = html;
+    }
+
+    function renderVisualization(mesh, model) {
+      const mode = document.getElementById("vizMode").value;
+      const combinedCanvas = document.getElementById("combinedCanvas");
+      const combinedTable = document.getElementById("combinedTableWrap");
+
+      const useTable = mode === "table";
+      combinedCanvas.classList.toggle("hidden", useTable);
+      combinedTable.classList.toggle("hidden", !useTable);
+
+      if (!model) return;
+      const maxAbs = Math.max(Math.abs(model.residual_min), Math.abs(model.residual_max));
+
+      if (useTable) {
+        renderCombinedTable("combinedTableWrap", mesh.points, model.residuals, mesh.z_min, mesh.z_max, -maxAbs, maxAbs);
+      } else {
+        drawCombinedMesh(mesh, model);
+      }
+    }
+
+    function getRotationProfile() {
+      const primaryDirectionMode = document.getElementById("mechDirectionPrimary").value;
+      const rightTargetMode = document.getElementById("mechTargetRight").value;
+
+      const primaryDirection = primaryDirectionMode === "left" ? "влево" : "вправо";
+      const oppositeDirection = primaryDirectionMode === "left" ? "вправо" : "влево";
+      const primaryVerb = "ОТКРУТИТЬ";
+      const oppositeVerb = "ЗАКРУТИТЬ";
+      const primaryTurn = primaryDirectionMode === "left" ? "CCW" : "CW";
+      const oppositeTurn = primaryDirectionMode === "left" ? "CW" : "CCW";
+      const rightTarget = rightTargetMode === "closer" ? "ближе к соплу" : "дальше от сопла";
+      const leftTarget = rightTargetMode === "closer" ? "дальше от сопла" : "ближе к соплу";
+
+      return {
+        mode: `${primaryDirectionMode}_${rightTargetMode}`,
+        primaryDirection,
+        oppositeDirection,
+        primaryMovesCloser: rightTargetMode === "closer",
+        byDirection: {
+          [primaryDirection]: { verb: primaryVerb, turn: primaryTurn, target: rightTarget },
+          [oppositeDirection]: { verb: oppositeVerb, turn: oppositeTurn, target: leftTarget },
+        },
+        reference: "Система отсчета: смотреть сверху на стол со стороны передней панели.",
+        mapping: `${primaryDirection} = ${primaryVerb} = ${primaryTurn} = ${rightTarget}, ${oppositeDirection} = ${oppositeVerb} = ${oppositeTurn} = ${leftTarget}.`,
+      };
+    }
+
+    function computeScrewAdjustments(mesh, model) {
+      const pitch = parseFloat(document.getElementById("pitch").value);
+      const tol = parseFloat(document.getElementById("tolerance").value) || 0;
+      const mode = document.getElementById("screwMode").value;
+      const rotation = getRotationProfile();
+
+      let sourceCorners = mesh.corners;
+      let baseline = mesh.z_avg;
+      if (mode === "plane" && model) {
+        sourceCorners = model.plane_corners;
+        baseline = model.center_plane;
+      }
+
+      const rows = corners.map((c) => {
+        const value = sourceCorners[c.key];
+        // delta > 0 means this corner is higher (closer to nozzle) than baseline.
+        const delta = value - baseline;
+        const turns = Math.abs(delta) / pitch;
+        const degrees = turns * 360;
+
+        let action = "в допуске";
+        let cls = "ok";
+        let direction = "-";
+        let verb = "-";
+        let target = "в допуске";
+        if (Math.abs(delta) > tol) {
+          const needsCloser = delta < 0;
+          const primaryDirectionFits = needsCloser ? rotation.primaryMovesCloser : !rotation.primaryMovesCloser;
+          direction = primaryDirectionFits ? rotation.primaryDirection : rotation.oppositeDirection;
+
+          if (delta > 0) {
+            target = "плоскость дальше от сопла";
+            cls = "ok";
+          } else {
+            target = "плоскость ближе к соплу";
+            cls = "bad";
+          }
+          verb = rotation.byDirection[direction].verb;
+          action = `${verb} (${target})`;
+        }
+
+        return {
+          label: c.label,
+          delta,
+          turns,
+          degrees,
+          direction,
+          verb,
+          target,
+          action,
+          cls,
+        };
+      });
+
+      rows.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+      return rows;
+    }
+
+    function renderStepProgram(rows) {
+      const lines = [];
+      const actionable = rows.filter((r) => r.action !== "в допуске");
+      const rotation = getRotationProfile();
+      const warnEl = document.getElementById("screwWarnOut");
+
+      if (!actionable.length) {
+        warnEl.style.display = "none";
+        warnEl.textContent = "";
+        document.getElementById("stepProgramOut").textContent = "Все углы в допуске. Итерации не требуются.";
+        return;
+      }
+
+      lines.push("Формат: угол -> действие, обороты (градусы)");
+      lines.push(rotation.reference);
+      lines.push(rotation.mapping);
+      lines.push("Один проход:");
+      actionable.forEach((r) => {
+        lines.push(`  ${r.label}: ${r.verb} (${r.direction}), ${fmt(r.turns, 2)} об (${fmt(r.degrees, 0)}°)`);
+      });
+      lines.push("После регулировки: прогреть стол/сопло и переснять mesh.");
+      document.getElementById("stepProgramOut").textContent = lines.join("\n");
+
+      const bigCorrections = actionable.filter((r) => r.turns > 1.5);
+      if (bigCorrections.length) {
+        warnEl.style.display = "";
+        warnEl.textContent = "⚠ Большая коррекция: " +
+          bigCorrections.map((r) => `${r.label} ${fmt(r.turns, 2)} об`).join(", ") +
+          ".\nПроверьте свободный ход винтов перед началом. Рекомендуется делать шаги по 30–60° за раз.";
+      } else {
+        warnEl.style.display = "none";
+        warnEl.textContent = "";
+      }
+    }
+
+    function renderScrewTable(mesh, model) {
+      const tbody = document.querySelector("#screwTable tbody");
+      tbody.innerHTML = "";
+
+      const rows = computeScrewAdjustments(mesh, model);
+      const rotation = getRotationProfile();
+      let maxAbs = 0;
+      rows.forEach((r) => {
+        maxAbs = Math.max(maxAbs, Math.abs(r.delta));
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.label}</td>
+          <td>${fmt(r.delta, 3)}</td>
+          <td>${fmt(r.turns, 2)}</td>
+          <td>${fmt(r.degrees, 0)}°</td>
+          <td>${r.direction}</td>
+          <td class="${r.cls}">${r.action}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      renderStepProgram(rows);
+
+      document.getElementById("balanceHint").textContent =
+        `Рекомендуемая последовательность: ${rows.map((r) => r.label).join(" -> ")}. Максимальная коррекция ${fmt(maxAbs, 3)} мм.` +
+        ` Правило: delta>0 => угол выше и его нужно опустить. ${rotation.reference} ${rotation.mapping}`;
+
+      const mode = document.getElementById("screwMode").value;
+      const modeText = mode === "plane" ? "plane tilt" : "raw corners";
+
+      state.reportText = [
+        "Bed Mesh Report",
+        `printer=${state.printerName || "unknown"}`,
+        `source=${state.meshSource || "unknown"}`,
+        `screw_thread=${state.screwThread || "unknown"}`,
+        `rotation_reference=${rotation.reference}`,
+        `rotation_mapping=${rotation.mapping}`,
+        `z_min=${fmt(mesh.z_min)} z_max=${fmt(mesh.z_max)} z_range=${fmt(mesh.z_range)} z_avg=${fmt(mesh.z_avg)}`,
+        model ? `residual_pv=${fmt(model.residual_pv)} residual_rms=${fmt(model.residual_rms)} twist=${fmt(model.twist)} planarity_score=${model.planarity_score}` : "",
+        `screw_mode=${modeText}`,
+        `rotation_mode=${rotation.primaryDirection}:${rotation.byDirection[rotation.primaryDirection].verb}/${rotation.byDirection[rotation.primaryDirection].turn}/${rotation.byDirection[rotation.primaryDirection].target}`,
+        "",
+        ...rows.map((r) => `${r.label}: delta=${fmt(r.delta)} mm, turns=${fmt(r.turns, 2)}, degrees=${fmt(r.degrees, 0)}, action=${r.verb} (${r.direction}), target=${r.target}`),
+      ].join("\n");
+    }
+
+    function renderModel(mesh, model) {
+      if (!model) {
+        document.getElementById("modelOut").textContent = "Не удалось построить модель плоскости.";
+        return;
+      }
+
+      document.getElementById("modelOut").textContent = [
+        `Best-fit plane: z = a*x + b*y + c`,
+        `a=${fmt(model.a, 7)} b=${fmt(model.b, 7)} c=${fmt(model.c, 4)}`,
+        `Наклон по X на ширину стола: ${fmt(model.slope_across_x, 3)} мм (tilt ${fmt(model.tilt_x_deg, 3)}°)`,
+        `Наклон по Y на глубину стола: ${fmt(model.slope_across_y, 3)} мм (tilt ${fmt(model.tilt_y_deg, 3)}°)`,
+        `Класс: ${model.class_label}`,
+      ].join("\n");
+
+      document.getElementById("kpiPv").textContent = `${fmt(model.residual_pv)} мм`;
+      document.getElementById("kpiRms").textContent = `${fmt(model.residual_rms)} мм`;
+      document.getElementById("kpiTwist").textContent = `${fmt(model.twist)} мм`;
+      document.getElementById("kpiPlanarity").textContent = `${model.planarity_score}/100`;
+    }
+
+    function renderStats(mesh, model) {
+      document.getElementById("meshStats").textContent =
+        `Сетка ${mesh.x_count}x${mesh.y_count} | min ${fmt(mesh.z_min)} мм | max ${fmt(mesh.z_max)} мм | range ${fmt(mesh.z_range)} мм | avg ${fmt(mesh.z_avg)} мм` +
+        (model ? ` | residual PV ${fmt(model.residual_pv)} мм | residual RMS ${fmt(model.residual_rms)} мм` : "");
+
+      document.getElementById("rawOut").textContent = JSON.stringify({ mesh, model }, null, 2);
+    }
+
+    function renderAll(mesh) {
+      const model = fitPlaneModel(mesh);
+      state.meshA = mesh;
+      state.modelA = model;
+        document.getElementById("screwWarnOut").style.display = "none";
+        document.getElementById("screwWarnOut").textContent = "";
+      renderVisualization(mesh, model);
+      renderModel(mesh, model);
+      renderStats(mesh, model);
+      renderScrewTable(mesh, model);
+      updateCompare();
+    }
+
+    function updateCompare() {
+      const out = document.getElementById("compareOut");
+      const compareCanvas = document.getElementById("compareCanvas");
+      const compareCtx = compareCanvas.getContext("2d");
+
+      function clearCompareCanvas(msg) {
+        compareCtx.clearRect(0, 0, compareCanvas.width, compareCanvas.height);
+        compareCtx.fillStyle = "#7f95a0";
+        compareCtx.font = "16px Segoe UI";
+        compareCtx.fillText(msg, 16, 28);
+      }
+
+      if (!state.meshA || !state.meshB) {
+        out.textContent = "Второй файл не загружен.";
+        clearCompareCanvas("Ожидание второго файла для сравнения");
+        return;
+      }
+
+      if (
+        state.meshA.points.length !== state.meshB.points.length ||
+        state.meshA.points[0].length !== state.meshB.points[0].length
+      ) {
+        out.textContent = "Сравнение невозможно: размер сеток отличается.";
+        clearCompareCanvas("Размер сеток A и B отличается");
+        return;
+      }
+
+      const flatA = state.meshA.points.flat();
+      const flatB = state.meshB.points.flat();
+      const minRaw = Math.min(...flatA, ...flatB);
+      const maxRaw = Math.max(...flatA, ...flatB);
+      const topFile = state.meshSource || "Файл A";
+      const bottomFile = state.meshSourceB || "Файл B";
+      drawSplitHeatmap(
+        "compareCanvas",
+        state.meshA.points,
+        state.meshB.points,
+        minRaw,
+        maxRaw,
+        minRaw,
+        maxRaw,
+        undefined,
+        { top: topFile, bottom: bottomFile }
+      );
+
+      const modelA = state.modelA || fitPlaneModel(state.meshA);
+      const modelB = state.modelB || fitPlaneModel(state.meshB);
+
+      const COLORS = {
+        text: "#e6f1f5",
+        muted: "#9ab0b8",
+        good: "#49b56f",
+        bad: "#d35a5a",
+        same: "#4aa3ff",
+        corner: "#ef9f52",
+      };
+
+      const pad = (s, n) => String(s).padEnd(n);
+      const padRight = (s, n) => String(s).padStart(n);
+      const span = (text, color) => `<span style="color:${color}">${text}</span>`;
+
+      function assessMetric(delta, lowerIsBetter = true, tol = 0.001) {
+        if (Math.abs(delta) < tol) {
+          return { aColor: COLORS.same, bColor: COLORS.same, aSymbol: "~", bSymbol: "~" };
+        }
+        const bBetter = lowerIsBetter ? delta < 0 : delta > 0;
+        if (bBetter) {
+          return { aColor: COLORS.bad, bColor: COLORS.good, aSymbol: "✗", bSymbol: "✓" };
+        }
+        return { aColor: COLORS.good, bColor: COLORS.bad, aSymbol: "✓", bSymbol: "✗" };
+      }
+
+      function metricLine(label, valA, valB, delta, lowerIsBetter = true, tol = 0.001) {
+        const result = assessMetric(delta, lowerIsBetter, tol);
+        const strA = padRight(fmt(valA, 3), 8);
+        const strB = padRight(fmt(valB, 3), 8);
+        const deltaStr = padRight(delta >= 0 ? `+${fmt(delta, 3)}` : fmt(delta, 3), 8);
+        return (
+          `${span(pad(label, 20), COLORS.text)} ` +
+          `A: ${span(strA, result.aColor)} ${span(result.aSymbol, result.aColor)}   ` +
+          `B: ${span(strB, result.bColor)} ${span(result.bSymbol, result.bColor)}    ` +
+          `Δ: ${span(deltaStr, COLORS.muted)}`
+        );
+      }
+
+      function cornerLine(label, valA, valB, delta, tol = 0.005) {
+        const strA = padRight(fmt(valA, 3), 8);
+        const strB = padRight(fmt(valB, 3), 8);
+        const deltaStr = padRight(delta >= 0 ? `+${fmt(delta, 3)}` : fmt(delta, 3), 8);
+        const symbol = Math.abs(delta) < tol ? "~" : (delta > 0 ? "↑" : "↓");
+        const symbolColor = Math.abs(delta) < tol ? COLORS.same : COLORS.corner;
+        return (
+          `${span(pad(label, 20), COLORS.text)} ` +
+          `A: ${span(strA, COLORS.text)}     ` +
+          `B: ${span(strB, COLORS.text)} ${span(symbol, symbolColor)}    ` +
+          `Δ: ${span(deltaStr, COLORS.muted)}`
+        );
+      }
+
+      const dRange = state.meshB.z_range - state.meshA.z_range;
+      const dAvg   = state.meshB.z_avg   - state.meshA.z_avg;
+
+      const lines = [];
+      lines.push(span(`Сравнение ${topFile} (основной) vs ${bottomFile} (сравниваемый)`, COLORS.text));
+      lines.push(span("─".repeat(90), COLORS.muted));
+      lines.push(metricLine("Range:", state.meshA.z_range, state.meshB.z_range, dRange, true, 0.001));
+      lines.push(metricLine("Average:", state.meshA.z_avg, state.meshB.z_avg, dAvg, false, 0.001));
+
+      if (modelA && modelB) {
+        const dPV    = modelB.residual_pv  - modelA.residual_pv;
+        const dRMS   = modelB.residual_rms - modelA.residual_rms;
+        const dTwist = modelB.twist        - modelA.twist;
+        lines.push(metricLine("Residual PV:", modelA.residual_pv, modelB.residual_pv, dPV, true, 0.001));
+        lines.push(metricLine("Residual RMS:", modelA.residual_rms, modelB.residual_rms, dRMS, true, 0.001));
+        lines.push(metricLine("Twist:", modelA.twist, modelB.twist, dTwist, true, 0.001));
+      }
+
+      lines.push(span("─".repeat(90), COLORS.muted));
+      lines.push(span("Углы стола:", COLORS.text));
+      const cornerLabels = { front_left: "FL", front_right: "FR", rear_left: "RL", rear_right: "RR" };
+      Object.entries(cornerLabels).forEach(([k, lbl]) => {
+        const valA = state.meshA.corners[k];
+        const valB = state.meshB.corners[k];
+        const d = valB - valA;
+        lines.push(cornerLine(lbl + ":", valA, valB, d));
+      });
+
+      out.innerHTML = lines.join("<br>");
+    }
+
+    function readFiles(inputEl, cb) {
+      const files = Array.from(inputEl.files || []);
+      if (!files.length) return;
+
+      Promise.all(files.map((f) => new Promise((resolve) => {
+        const fr = new FileReader();
+        fr.onload = () => {
+          resolve({
+            name: f.name,
+            lastModified: f.lastModified || 0,
+            text: String(fr.result || ""),
+          });
+        };
+        fr.readAsText(f);
+      }))).then((items) => cb(items));
+    }
+
+    document.getElementById("cfgFile").addEventListener("change", (e) => {
+      readFiles(e.target, (files) => {
+        const merged = mergeMeshSources(files);
+        if (!merged.chosen || !merged.chosen.meshCount) {
+          alert("Не найден [bed_mesh ...] ни в одном выбранном файле.");
+          return;
+        }
+
+        const chosen = merged.chosen;
+        const meshes = chosen.meshes;
+        const sourceName = chosen.name;
+
+        state.meshSource = sourceName;
+        state.printerName = chosen.meta.printerName;
+        state.screwThread = chosen.meta.screwThread;
+        updateSourceBadges({
+          printerName: chosen.meta.printerName,
+          sourceName,
+          screwThread: chosen.meta.screwThread,
+          kinematics: chosen.meta.kinematics,
+        });
+
+        const autoPitch = threadToPitch(chosen.meta.screwThread);
+        if (autoPitch) {
+          document.getElementById("pitch").value = autoPitch;
+        }
+
+        state.allMeshes = meshes;
+        const meshNames = Object.keys(meshes);
+        const selectEl = document.getElementById("meshSelect");
+        const selectRowEl = document.getElementById("meshSelectRow");
+
+        if (meshNames.length > 1) {
+          selectEl.innerHTML = meshNames.map((name) => `<option value="${name}">${name}</option>`).join("");
+          selectRowEl.style.display = "";
+        } else {
+          selectRowEl.style.display = "none";
+        }
+
+        const firstMesh = meshes[meshNames[0]];
+        renderAll(firstMesh);
+      });
+    });
+
+    document.getElementById("meshSelect").addEventListener("change", (e) => {
+      const selectedName = e.target.value;
+      const mesh = state.allMeshes[selectedName];
+      if (mesh) {
+        renderAll(mesh);
+      }
+    });
+
+    document.getElementById("cfgFile2").addEventListener("change", (e) => {
+      readFiles(e.target, (files) => {
+        const text = files[0] ? files[0].text : "";
+        const meshes = parseMesh(text);
+        if (!meshes || !Object.keys(meshes).length) {
+          alert("Во втором файле mesh не найден.");
+          return;
+        }
+        const firstMesh = meshes[Object.keys(meshes)[0]];
+        state.meshSourceB = files[0] ? files[0].name : null;
+        state.meshB = firstMesh;
+        state.modelB = fitPlaneModel(firstMesh);
+        updateCompare();
+      });
+    });
+
+    document.getElementById("pitch").addEventListener("change", () => {
+      if (state.meshA) renderScrewTable(state.meshA, state.modelA);
+    });
+
+    document.getElementById("tolerance").addEventListener("input", () => {
+      if (state.meshA) {
+        renderScrewTable(state.meshA, state.modelA);
+        renderVisualization(state.meshA, state.modelA);
+      }
+    });
+
+    document.getElementById("nozzleDia").addEventListener("change", () => {
+      const map = { "0.2": "0.05", "0.4": "0.15", "0.6": "0.20", "0.8": "0.25" };
+      const v = document.getElementById("nozzleDia").value;
+      if (map[v]) {
+        document.getElementById("tolerance").value = map[v];
+        if (state.meshA) {
+          renderScrewTable(state.meshA, state.modelA);
+          renderVisualization(state.meshA, state.modelA);
+        }
+      }
+    });
+
+    document.getElementById("screwMode").addEventListener("change", () => {
+      if (state.meshA) renderScrewTable(state.meshA, state.modelA);
+    });
+
+    function rerenderOnMechanicsChange() {
+      if (state.meshA) renderScrewTable(state.meshA, state.modelA);
+    }
+
+    document.getElementById("mechTargetRight").addEventListener("change", rerenderOnMechanicsChange);
+    document.getElementById("mechDirectionPrimary").addEventListener("change", rerenderOnMechanicsChange);
+
+    document.getElementById("vizMode").addEventListener("change", () => {
+      if (state.meshA) renderVisualization(state.meshA, state.modelA);
+    });
+
+    document.getElementById("copyBtn").addEventListener("click", async () => {
+      if (!state.reportText) {
+        alert("Сначала загрузите mesh.");
+        return;
+      }
+      await navigator.clipboard.writeText(state.reportText);
+      alert("Отчет скопирован.");
+    });
+
+    document.getElementById("csvBtn").addEventListener("click", () => {
+      if (!state.meshA) {
+        alert("Сначала загрузите mesh.");
+        return;
+      }
+      const rows = computeScrewAdjustments(state.meshA, state.modelA);
+      const csv = ["corner,delta_mm,turns,degrees,direction,action"]
+        .concat(rows.map((r) => `${r.label},${r.delta.toFixed(6)},${r.turns.toFixed(4)},${r.degrees.toFixed(1)},${r.direction},${r.action}`))
+        .join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "bed_mesh_screw_adjustments.csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "pitch": "0.5",
+  "tolerance": 0.05,
+  "vizMode": "heatmap",
+  "screwMode": "plane",
+  "rotationMode": "cw_lower"
+}
