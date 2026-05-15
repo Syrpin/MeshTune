@@ -255,6 +255,30 @@
       font-size: 0.82rem;
       opacity: 0.9;
     }
+    .lang-switcher {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .lang-btn {
+      padding: 5px 10px;
+      font-size: 0.85rem;
+      background: #1a2834;
+      border: 1px solid #36505d;
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .lang-btn:hover {
+      background: #22303a;
+    }
+    .lang-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+    }
     @media (max-width: 900px) {
       .grid { grid-template-columns: 1fr; }
       .split { grid-template-columns: 1fr; }
@@ -267,32 +291,38 @@
 </head>
 <body>
   <div class="wrap">
+    <div class="lang-switcher">
+      <span style="color: var(--muted); font-size: 0.9rem;">Language:</span>
+      <button class="lang-btn active" data-lang="ru">Русский</button>
+      <button class="lang-btn" data-lang="en">English</button>
+      <button class="lang-btn" data-lang="es">Español</button>
+    </div>
     <h1>MeshTune</h1>
-    <div class="hint"><strong>MeshTune: Don't wing it. Screw it right.</strong> Загрузите один или несколько конфигурационных файлов (.cfg/.txt/.log). Инструмент поддерживает совместную загрузку printer.cfg и printer.base.cfg и выбирает приоритетный источник mesh автоматически.</div>
+    <div class="hint"><strong>MeshTune: Don't wing it. Screw it right.</strong> <span data-i18n="hint_text">Загрузите один или несколько конфигурационных файлов (.cfg/.txt/.log). Инструмент поддерживает совместную загрузку printer.cfg и printer.base.cfg и выбирает приоритетный источник mesh автоматически.</span></div>
 
     <div class="grid">
       <section class="card viz-card">
         <div class="row file-row">
-          <label>Файлы конфигурации:</label>
+          <label data-i18n="file_config">Файлы конфигурации:</label>
           <input id="cfgFile" type="file" accept=".cfg,.txt,.log" multiple />
-          <button id="copyBtn" class="secondary">Копировать отчет</button>
-          <button id="csvBtn" class="secondary">CSV</button>
+          <button id="copyBtn" class="secondary" data-i18n="copy_report">Копировать отчет</button>
+          <button id="csvBtn" class="secondary" data-i18n="csv_btn">CSV</button>
         </div>
 
         <div class="row">
-          <span id="printerNameBadge" class="badge">Принтер: не определен</span>
-          <span id="sourceBadge" class="badge">Источник mesh: -</span>
-          <span id="threadBadge" class="badge">Резьба: -</span>
+          <span id="printerNameBadge" class="badge"><span data-i18n="printer_badge">Принтер:</span> <span data-i18n="undefined_printer">не определен</span></span>
+          <span id="sourceBadge" class="badge"><span data-i18n="source_badge">Источник mesh:</span> -</span>
+          <span id="threadBadge" class="badge"><span data-i18n="thread_badge">Резьба:</span> -</span>
         </div>
 
         <div class="row" id="meshSelectRow" style="display:none;">
-          <label>Выберите mesh:</label>
+          <label data-i18n="mesh_select_label">Выберите mesh:</label>
           <select id="meshSelect"></select>
         </div>
 
         <div class="row metrics-row">
           <span class="control">
-            <label>Шаг винта (мм/оборот):</label>
+            <label data-i18n="pitch_label">Шаг винта (мм/оборот):</label>
             <select id="pitch">
               <option value="0.5" selected>0.5</option>
               <option value="0.7">0.7</option>
@@ -301,7 +331,7 @@
             </select>
           </span>
           <span class="control">
-            <label>Сопло (мм):</label>
+            <label data-i18n="nozzle_label">Сопло (мм):</label>
             <select id="nozzleDia">
               <option value="">—</option>
               <option value="0.2">0.2</option>
@@ -311,38 +341,38 @@
             </select>
           </span>
           <span class="control">
-            <label>Допуск (мм):</label>
+            <label data-i18n="tolerance_label">Допуск (мм):</label>
             <input id="tolerance" type="number" value="0.15" min="0" step="0.01" />
           </span>
         </div>
 
         <div class="row">
           <span class="control">
-            <label>Механика винта:</label>
+            <label data-i18n="mechanics_label">Механика винта:</label>
             <select id="mechDirectionPrimary">
-              <option value="right" selected>закрутить</option>
-              <option value="left">открутить</option>
+              <option value="right" selected data-i18n="direction_cw">закрутить</option>
+              <option value="left" data-i18n="direction_ccw">открутить</option>
             </select>
             <select id="mechTargetRight">
-              <option value="closer" selected>ближе к соплу</option>
-              <option value="farther">дальше от сопла</option>
+              <option value="closer" selected data-i18n="target_closer">ближе к соплу</option>
+              <option value="farther" data-i18n="target_farther">дальше от сопла</option>
             </select>
           </span>
         </div>
 
         <div class="row">
           <span class="control">
-            <label>Визуализация:</label>
+            <label data-i18n="viz_label">Визуализация:</label>
             <select id="vizMode">
-              <option value="heatmap" selected>Heatmap (canvas)</option>
-              <option value="table">Table (HTML)</option>
+              <option value="heatmap" selected data-i18n="viz_heatmap">Heatmap (canvas)</option>
+              <option value="table" data-i18n="viz_table">Table (HTML)</option>
             </select>
           </span>
           <span class="control">
-            <label>Расчет винтов:</label>
+            <label data-i18n="calc_label">Расчет винтов:</label>
             <select id="screwMode">
-              <option value="plane" selected>по наклону плоскости</option>
-              <option value="raw">по сырым углам</option>
+              <option value="plane" selected data-i18n="calc_plane">по наклону плоскости</option>
+              <option value="raw" data-i18n="calc_raw">по сырым углам</option>
             </select>
           </span>
         </div>
@@ -354,28 +384,28 @@
       </section>
 
       <section class="card">
-        <h3 style="margin:0 0 8px;">Расчет винтов</h3>
+        <h3 style="margin:0 0 8px;" data-i18n="screw_calc">Расчет винтов</h3>
         <table id="screwTable">
           <thead>
             <tr>
-              <th>Угол</th>
-              <th>Delta, мм</th>
-              <th>Обороты</th>
-              <th>Градусы</th>
-              <th>Направл.</th>
-              <th>Действие</th>
+              <th data-i18n="corner_col">Угол</th>
+              <th data-i18n="delta_col">Delta, мм</th>
+              <th data-i18n="turns_col">Обороты</th>
+              <th data-i18n="degrees_col">Градусы</th>
+              <th data-i18n="direction_col">Направл.</th>
+              <th data-i18n="action_col">Действие</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
         <div id="balanceHint" class="hint" style="margin-top: 8px;"></div>
 
-        <h3 style="margin:14px 0 8px;">Рекомендация за один проход</h3>
+        <h3 style="margin:14px 0 8px;" data-i18n="one_pass_rec">Рекомендация за один проход</h3>
         <div id="stepProgramOut" class="mono">-</div>
         <div id="screwWarnOut" class="mono" style="margin-top:6px;display:none;border-color:var(--warn);color:var(--warn);"></div>
         <details style="margin-top:10px;">
-          <summary style="cursor:pointer;font-weight:600;color:var(--muted);user-select:none;">Чек-лист перед регулировкой</summary>
-          <div class="mono" style="margin-top:6px;font-size:0.85rem;">До начала:
+          <summary style="cursor:pointer;font-weight:600;color:var(--muted);user-select:none;" data-i18n="checklist_title">Чек-лист перед регулировкой</summary>
+          <div class="mono" style="margin-top:6px;font-size:0.85rem;" data-i18n="checklist_text">До начала:
 □ Прогреть стол 10+ мин до рабочей температуры
 □ Проверить чистоту и плоскостность покрытия стола
 □ Убедиться в отсутствии люфтов в каретках и винтах
@@ -391,24 +421,24 @@
 → Включить программную mesh-компенсацию (BED_MESH_CALIBRATE)</div>
         </details>
 
-        <h3 style="margin:14px 0 8px;">Модель линейности и деформации</h3>
+        <h3 style="margin:14px 0 8px;" data-i18n="linearity_model">Модель линейности и деформации</h3>
         <div id="modelOut" class="mono">-</div>
         <div class="kpi-grid">
-          <div class="kpi"><div class="name">Остаток PV</div><div id="kpiPv" class="val">-</div></div>
-          <div class="kpi"><div class="name">Остаток RMS</div><div id="kpiRms" class="val">-</div></div>
-          <div class="kpi"><div class="name">Скручивание</div><div id="kpiTwist" class="val">-</div></div>
-          <div class="kpi"><div class="name">Оценка планарности</div><div id="kpiPlanarity" class="val">-</div></div>
+          <div class="kpi"><div class="name" data-i18n="pv_residual">Остаток PV</div><div id="kpiPv" class="val">-</div></div>
+          <div class="kpi"><div class="name" data-i18n="rms_residual">Остаток RMS</div><div id="kpiRms" class="val">-</div></div>
+          <div class="kpi"><div class="name" data-i18n="twist_label">Скручивание</div><div id="kpiTwist" class="val">-</div></div>
+          <div class="kpi"><div class="name" data-i18n="planarity_score">Оценка планарности</div><div id="kpiPlanarity" class="val">-</div></div>
         </div>
       </section>
 
       <section class="card" style="grid-column: 1 / -1;">
-        <h3 id="meshStats" style="margin:0;">Нет данных.</h3>
+        <h3 id="meshStats" style="margin:0;" data-i18n="no_data">Нет данных.</h3>
       </section>
 
       <section class="card" style="grid-column: 1 / -1;">
-        <h3 style="margin:0 0 8px;">Сравнение с 2-м mesh (до/после)</h3>
+        <h3 style="margin:0 0 8px;" data-i18n="compare_title">Сравнение с 2-м mesh (до/после)</h3>
         <div class="row file-row" style="margin-bottom: 12px;">
-          <label>Загрузите второй файл:</label>
+          <label data-i18n="compare_file">Загрузите второй файл:</label>
           <input id="cfgFile2" type="file" accept=".cfg,.txt,.log" />
         </div>
         <div class="compare-grid">
@@ -416,9 +446,9 @@
             <canvas id="compareCanvas" width="560" height="560"></canvas>
           </div>
           <div>
-            <div id="compareOut" class="mono">Второй файл не загружен.</div>
+            <div id="compareOut" class="mono" data-i18n="compare_no_file">Второй файл не загружен.</div>
             <details style="margin-top:14px;">
-              <summary style="cursor:pointer;font-weight:600;font-size:1rem;color:var(--text);user-select:none;">Сырые данные</summary>
+              <summary style="cursor:pointer;font-weight:600;font-size:1rem;color:var(--text);user-select:none;" data-i18n="raw_data">Сырые данные</summary>
               <div id="rawOut" class="mono" style="margin-top:8px;">-</div>
             </details>
           </div>
@@ -430,7 +460,347 @@
   </div>
 
   <script>
-    const state = {
+    // ========== TRANSLATION SYSTEM ==========
+    const translations = {
+      ru: {
+        hint_text: "Загрузите один или несколько конфигурационных файлов (.cfg/.txt/.log). Инструмент поддерживает совместную загрузку printer.cfg и printer.base.cfg и выбирает приоритетный источник mesh автоматически.",
+        file_config: "Файлы конфигурации:",
+        copy_report: "Копировать отчет",
+        csv_btn: "CSV",
+        printer_badge: "Принтер:",
+        undefined_printer: "не определен",
+        source_badge: "Источник mesh:",
+        thread_badge: "Резьба:",
+        mesh_select_label: "Выберите mesh:",
+        pitch_label: "Шаг винта (мм/оборот):",
+        nozzle_label: "Сопло (мм):",
+        tolerance_label: "Допуск (мм):",
+        mechanics_label: "Механика винта:",
+        direction_cw: "закрутить",
+        direction_ccw: "открутить",
+        target_closer: "ближе к соплу",
+        target_farther: "дальше от сопла",
+        viz_label: "Визуализация:",
+        viz_heatmap: "Heatmap (canvas)",
+        viz_table: "Table (HTML)",
+        calc_label: "Расчет винтов:",
+        calc_plane: "по наклону плоскости",
+        calc_raw: "по сырым углам",
+        screw_calc: "Расчет винтов",
+        corner_col: "Угол",
+        delta_col: "Delta, мм",
+        turns_col: "Обороты",
+        degrees_col: "Градусы",
+        direction_col: "Направл.",
+        action_col: "Действие",
+        one_pass_rec: "Рекомендация за один проход",
+        checklist_title: "Чек-лист перед регулировкой",
+        checklist_text: `До начала:
+□ Прогреть стол 10+ мин до рабочей температуры
+□ Проверить чистоту и плоскостность покрытия стола
+□ Убедиться в отсутствии люфтов в каретках и винтах
+□ Зафиксировать раму в рабочем положении
+
+После регулировки:
+□ Не затягивать винты до упора — оставить 10–20% хода
+□ Переснять mesh только после стабилизации температуры
+□ Сравнить с предыдущим mesh в 2-pass режиме
+
+Когда остановиться:
+→ Residual RMS < 0.08 мм и все |residual| < tolerance
+→ Включить программную mesh-компенсацию (BED_MESH_CALIBRATE)`,
+        linearity_model: "Модель линейности и деформации",
+        pv_residual: "Остаток PV",
+        rms_residual: "Остаток RMS",
+        twist_label: "Скручивание",
+        planarity_score: "Оценка планарности",
+        no_data: "Нет данных.",
+        compare_title: "Сравнение с 2-м mesh (до/после)",
+        compare_file: "Загрузите второй файл:",
+        compare_no_file: "Второй файл не загружен.",
+        raw_data: "Сырые данные",
+        alert_no_mesh: "Не найден [bed_mesh ...] ни в одном выбранном файле.",
+        alert_copy: "Отчет скопирован.",
+        alert_first_load: "Сначала загрузите mesh.",
+        alert_compare_size: "Сравнение невозможно: размер сеток отличается.",
+        alert_no_mesh_b: "Во втором файле mesh не найден.",
+        model_plane: "Best-fit plane: z = a*x + b*y + c",
+        model_no_fit: "Не удалось построить модель плоскости.",
+        model_slope_x: "Наклон по X на ширину стола:",
+        model_slope_y: "Наклон по Y на глубину стола:",
+        model_class: "Класс:",
+        model_tilt: "tilt",
+        reference: "Система отсчета: смотреть сверху на стол со стороны передней панели.",
+        balance_hint: "Рекомендуемая последовательность:",
+        max_correction: "Максимальная коррекция",
+        rule: "Правило: delta>0 => угол выше и его нужно опустить.",
+        in_tolerance: "в допуске",
+        all_ok: "Все углы в допуске. Итерации не требуются.",
+        format_hint: "Формат: угол -> действие, обороты (градусы)",
+        one_pass: "Один проход:",
+        after_adjust: "После регулировки: прогреть стол/сопло и переснять mesh.",
+        big_correction: "⚠ Большая коррекция:",
+        check_free: "Проверьте свободный ход винтов перед началом. Рекомендуется делать шаги по 30–60° за раз.",
+        corners: "Углы стола:",
+        compare_header: "Сравнение",
+        raw_mesh: "Сырой Mesh",
+        fitted_plane: "Рассчетная плоскость",
+        mesh_grid: "Сетка",
+        mesh_size: "Сетка",
+        mesh_min: "min",
+        mesh_max: "max",
+        mesh_range: "range",
+        mesh_avg: "avg",
+        mesh_residual_pv: "residual PV",
+        mesh_residual_rms: "residual RMS",
+        compare_vs: "vs",
+        table_range: "Range:",
+        table_average: "Average:",
+        table_pv: "Residual PV:",
+        table_rms: "Residual RMS:",
+        table_twist: "Twist:",
+      },
+      en: {
+        hint_text: "Load one or more configuration files (.cfg/.txt/.log). The tool supports joint loading of printer.cfg and printer.base.cfg and automatically selects the priority mesh source.",
+        file_config: "Config Files:",
+        copy_report: "Copy Report",
+        csv_btn: "CSV",
+        printer_badge: "Printer:",
+        undefined_printer: "not defined",
+        source_badge: "Mesh Source:",
+        thread_badge: "Thread:",
+        mesh_select_label: "Select mesh:",
+        pitch_label: "Screw Pitch (mm/turn):",
+        nozzle_label: "Nozzle (mm):",
+        tolerance_label: "Tolerance (mm):",
+        mechanics_label: "Screw Mechanics:",
+        direction_cw: "clockwise",
+        direction_ccw: "counter-clockwise",
+        target_closer: "closer to nozzle",
+        target_farther: "farther from nozzle",
+        viz_label: "Visualization:",
+        viz_heatmap: "Heatmap (canvas)",
+        viz_table: "Table (HTML)",
+        calc_label: "Screw Calc:",
+        calc_plane: "by plane tilt",
+        calc_raw: "by raw corners",
+        screw_calc: "Screw Calculation",
+        corner_col: "Corner",
+        delta_col: "Delta, mm",
+        turns_col: "Turns",
+        degrees_col: "Degrees",
+        direction_col: "Direction",
+        action_col: "Action",
+        one_pass_rec: "One-Pass Recommendation",
+        checklist_title: "Pre-Adjustment Checklist",
+        checklist_text: `Before Starting:
+□ Heat bed for 10+ min to working temperature
+□ Check bed surface cleanliness and flatness
+□ Ensure no play in carriages or screws
+□ Secure frame in working position
+
+After Adjustment:
+□ Do not tighten screws to the limit — leave 10–20% travel
+□ Re-probe mesh only after temperature stabilizes
+□ Compare with previous mesh in 2-pass mode
+
+When to Stop:
+→ Residual RMS < 0.08 mm and all |residual| < tolerance
+→ Enable software mesh compensation (BED_MESH_CALIBRATE)`,
+        linearity_model: "Linearity and Deformation Model",
+        pv_residual: "Residual PV",
+        rms_residual: "Residual RMS",
+        twist_label: "Twist",
+        planarity_score: "Planarity Score",
+        no_data: "No data.",
+        compare_title: "Comparison with 2nd Mesh (Before/After)",
+        compare_file: "Load Second File:",
+        compare_no_file: "Second file not loaded.",
+        raw_data: "Raw Data",
+        alert_no_mesh: "[bed_mesh ...] not found in any selected file.",
+        alert_copy: "Report copied.",
+        alert_first_load: "Load mesh first.",
+        alert_compare_size: "Comparison failed: mesh sizes differ.",
+        alert_no_mesh_b: "Mesh not found in second file.",
+        model_plane: "Best-fit plane: z = a*x + b*y + c",
+        model_no_fit: "Could not fit plane model.",
+        model_slope_x: "Slope across X (bed width):",
+        model_slope_y: "Slope across Y (bed depth):",
+        model_class: "Class:",
+        model_tilt: "tilt",
+        reference: "Reference frame: view bed from above, front panel facing you.",
+        balance_hint: "Recommended sequence:",
+        max_correction: "Maximum correction",
+        rule: "Rule: delta>0 => corner is high, needs lowering.",
+        in_tolerance: "in tolerance",
+        all_ok: "All corners in tolerance. No iterations needed.",
+        format_hint: "Format: corner -> action, turns (degrees)",
+        one_pass: "One pass:",
+        after_adjust: "After adjustment: heat bed/nozzle and re-probe mesh.",
+        big_correction: "⚠ Large correction:",
+        check_free: "Check screw free travel before starting. Recommended: steps of 30–60° at a time.",
+        corners: "Bed Corners:",
+        compare_header: "Comparison",
+        raw_mesh: "Raw Mesh",
+        fitted_plane: "Fitted Plane",
+        mesh_grid: "Grid",
+        mesh_size: "Grid",
+        mesh_min: "min",
+        mesh_max: "max",
+        mesh_range: "range",
+        mesh_avg: "avg",
+        mesh_residual_pv: "residual PV",
+        mesh_residual_rms: "residual RMS",
+        compare_vs: "vs",
+        table_range: "Range:",
+        table_average: "Average:",
+        table_pv: "Residual PV:",
+        table_rms: "Residual RMS:",
+        table_twist: "Twist:",
+      },
+      es: {
+        hint_text: "Cargue uno o más archivos de configuración (.cfg/.txt/.log). La herramienta admite la carga conjunta de printer.cfg y printer.base.cfg y selecciona automáticamente la fuente de malla prioritaria.",
+        file_config: "Archivos de Configuración:",
+        copy_report: "Copiar Informe",
+        csv_btn: "CSV",
+        printer_badge: "Impresora:",
+        undefined_printer: "no definida",
+        source_badge: "Fuente de Malla:",
+        thread_badge: "Rosca:",
+        mesh_select_label: "Selecciona malla:",
+        pitch_label: "Paso del Tornillo (mm/vuelta):",
+        nozzle_label: "Boquilla (mm):",
+        tolerance_label: "Tolerancia (mm):",
+        mechanics_label: "Mecánica del Tornillo:",
+        direction_cw: "en sentido horario",
+        direction_ccw: "en sentido antihorario",
+        target_closer: "más cerca de la boquilla",
+        target_farther: "más lejos de la boquilla",
+        viz_label: "Visualización:",
+        viz_heatmap: "Heatmap (canvas)",
+        viz_table: "Table (HTML)",
+        calc_label: "Cálculo de Tornillo:",
+        calc_plane: "por inclinación del plano",
+        calc_raw: "por esquinas crudas",
+        screw_calc: "Cálculo de Tornillo",
+        corner_col: "Esquina",
+        delta_col: "Delta, mm",
+        turns_col: "Vueltas",
+        degrees_col: "Grados",
+        direction_col: "Dirección",
+        action_col: "Acción",
+        one_pass_rec: "Recomendación de Una Pasada",
+        checklist_title: "Lista de Verificación Previa al Ajuste",
+        checklist_text: `Antes de Comenzar:
+□ Calentar cama 10+ min a temperatura de trabajo
+□ Verificar limpieza y planitud de la superficie de la cama
+□ Asegurar que no haya holgura en carros o tornillos
+□ Fijar marco en posición de trabajo
+
+Después del Ajuste:
+□ No apretar tornillos al máximo — dejar 10–20% de recorrido
+□ Sondear malla nuevamente solo después de estabilizar temperatura
+□ Comparar con malla anterior en modo 2 pasadas
+
+Cuándo Detener:
+→ RMS residual < 0.08 mm y todos |residual| < tolerancia
+→ Habilitar compensación de malla por software (BED_MESH_CALIBRATE)`,
+        linearity_model: "Modelo de Linealidad y Deformación",
+        pv_residual: "PV Residual",
+        rms_residual: "RMS Residual",
+        twist_label: "Torsión",
+        planarity_score: "Puntuación de Planaridad",
+        no_data: "Sin datos.",
+        compare_title: "Comparación con 2ª Malla (Antes/Después)",
+        compare_file: "Cargar Segundo Archivo:",
+        compare_no_file: "Segundo archivo no cargado.",
+        raw_data: "Datos Crudos",
+        alert_no_mesh: "[bed_mesh ...] no encontrado en ningún archivo seleccionado.",
+        alert_copy: "Informe copiado.",
+        alert_first_load: "Cargue malla primero.",
+        alert_compare_size: "Comparación fallida: tamaños de malla diferentes.",
+        alert_no_mesh_b: "Malla no encontrada en segundo archivo.",
+        model_plane: "Plano de mejor ajuste: z = a*x + b*y + c",
+        model_no_fit: "No se pudo ajustar el modelo del plano.",
+        model_slope_x: "Pendiente en X (ancho de cama):",
+        model_slope_y: "Pendiente en Y (profundidad de cama):",
+        model_class: "Clase:",
+        model_tilt: "inclinación",
+        reference: "Marco de referencia: ver cama desde arriba, panel frontal mirando hacia ti.",
+        balance_hint: "Secuencia recomendada:",
+        max_correction: "Corrección máxima",
+        rule: "Regla: delta>0 => esquina está alta, necesita bajarse.",
+        in_tolerance: "dentro de tolerancia",
+        all_ok: "Todas las esquinas dentro de tolerancia. No se necesitan iteraciones.",
+        format_hint: "Formato: esquina -> acción, vueltas (grados)",
+        one_pass: "Una pasada:",
+        after_adjust: "Después del ajuste: calentar cama/boquilla y sondear malla nuevamente.",
+        big_correction: "⚠ Corrección grande:",
+        check_free: "Verificar recorrido libre del tornillo antes de comenzar. Recomendado: pasos de 30–60° por vez.",
+        corners: "Esquinas de la Cama:",
+        compare_header: "Comparación",
+        raw_mesh: "Malla Cruda",
+        fitted_plane: "Plano Ajustado",
+        mesh_grid: "Malla",
+        mesh_size: "Malla",
+        mesh_min: "mín",
+        mesh_max: "máx",
+        mesh_range: "rango",
+        mesh_avg: "promedio",
+        mesh_residual_pv: "PV residual",
+        mesh_residual_rms: "RMS residual",
+        compare_vs: "vs",
+        table_range: "Rango:",
+        table_average: "Promedio:",
+        table_pv: "PV Residual:",
+        table_rms: "RMS Residual:",
+        table_twist: "Torsión:",
+      }
+    };
+
+    let currentLang = localStorage.getItem('meshTuneLang') || 'ru';
+
+    function t(key) {
+      return translations[currentLang][key] || translations['ru'][key] || key;
+    }
+
+    function updateLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('meshTuneLang', lang);
+      
+      // Update all data-i18n elements
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        el.textContent = t(key);
+      });
+      
+      // Update button states
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+      });
+      
+      // Rebuild UI with new language
+      if (state.meshA) {
+        renderVisualization(state.meshA, state.modelA);
+        renderModel(state.meshA, state.modelA);
+        renderStats(state.meshA, state.modelA);
+        renderScrewTable(state.meshA, state.modelA);
+        updateCompare();
+      }
+    }
+
+    // Set initial active button
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelector(`[data-lang="${currentLang}"]`)?.classList.add('active');
+      
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          updateLanguage(btn.getAttribute('data-lang'));
+        });
+      });
+    });
+
+    // ========== ORIGINAL CODE ==========
       meshA: null,
       meshB: null,
       modelA: null,
@@ -555,10 +925,10 @@
       const s = document.getElementById("sourceBadge");
       const t = document.getElementById("threadBadge");
 
-      const printerLabel = kinematics ? `${printerName} (${kinematics})` : (printerName || "не определен");
-      p.textContent = `Принтер: ${printerLabel}`;
-      s.textContent = `Источник mesh: ${sourceName || "-"}`;
-      t.textContent = `Резьба: ${formatThreadBadge(screwThread)}`;
+      const printerLabel = kinematics ? `${printerName} (${kinematics})` : (printerName || t("undefined_printer"));
+      p.innerHTML = `<span data-i18n="printer_badge">${t("printer_badge")}</span> ${printerLabel}`;
+      s.innerHTML = `<span data-i18n="source_badge">${t("source_badge")}</span> ${sourceName || "-"}`;
+      t.innerHTML = `<span data-i18n="thread_badge">${t("thread_badge")}</span> ${formatThreadBadge(screwThread)}`;
     }
 
     function findAllMeshes(text) {
@@ -967,7 +1337,7 @@
         -maxAbs,
         maxAbs,
         tol,
-        { top: "Сырой Mesh", bottom: "Рассчетная плоскость" }
+        { top: t("raw_mesh"), bottom: t("fitted_plane") }
       );
     }
 
@@ -1053,26 +1423,25 @@
 
       const rows = corners.map((c) => {
         const value = sourceCorners[c.key];
-        // delta > 0 means this corner is higher (closer to nozzle) than baseline.
         const delta = value - baseline;
         const turns = Math.abs(delta) / pitch;
         const degrees = turns * 360;
 
-        let action = "в допуске";
+        let action = t("in_tolerance");
         let cls = "ok";
         let direction = "-";
         let verb = "-";
-        let target = "в допуске";
+        let target = t("in_tolerance");
         if (Math.abs(delta) > tol) {
           const needsCloser = delta < 0;
           const primaryDirectionFits = needsCloser ? rotation.primaryMovesCloser : !rotation.primaryMovesCloser;
           direction = primaryDirectionFits ? rotation.primaryDirection : rotation.oppositeDirection;
 
           if (delta > 0) {
-            target = "плоскость дальше от сопла";
+            target = t("target_farther");
             cls = "ok";
           } else {
-            target = "плоскость ближе к соплу";
+            target = t("target_closer");
             cls = "bad";
           }
           verb = rotation.byDirection[direction].verb;
@@ -1098,33 +1467,33 @@
 
     function renderStepProgram(rows) {
       const lines = [];
-      const actionable = rows.filter((r) => r.action !== "в допуске");
+      const actionable = rows.filter((r) => r.action !== t("in_tolerance"));
       const rotation = getRotationProfile();
       const warnEl = document.getElementById("screwWarnOut");
 
       if (!actionable.length) {
         warnEl.style.display = "none";
         warnEl.textContent = "";
-        document.getElementById("stepProgramOut").textContent = "Все углы в допуске. Итерации не требуются.";
+        document.getElementById("stepProgramOut").textContent = t("all_ok");
         return;
       }
 
-      lines.push("Формат: угол -> действие, обороты (градусы)");
+      lines.push(t("format_hint"));
       lines.push(rotation.reference);
       lines.push(rotation.mapping);
-      lines.push("Один проход:");
+      lines.push(t("one_pass"));
       actionable.forEach((r) => {
         lines.push(`  ${r.label}: ${r.verb} (${r.direction}), ${fmt(r.turns, 2)} об (${fmt(r.degrees, 0)}°)`);
       });
-      lines.push("После регулировки: прогреть стол/сопло и переснять mesh.");
+      lines.push(t("after_adjust"));
       document.getElementById("stepProgramOut").textContent = lines.join("\n");
 
       const bigCorrections = actionable.filter((r) => r.turns > 1.5);
       if (bigCorrections.length) {
         warnEl.style.display = "";
-        warnEl.textContent = "⚠ Большая коррекция: " +
+        warnEl.textContent = t("big_correction") + " " +
           bigCorrections.map((r) => `${r.label} ${fmt(r.turns, 2)} об`).join(", ") +
-          ".\nПроверьте свободный ход винтов перед началом. Рекомендуется делать шаги по 30–60° за раз.";
+          ".\n" + t("check_free");
       } else {
         warnEl.style.display = "none";
         warnEl.textContent = "";
@@ -1155,8 +1524,8 @@
       renderStepProgram(rows);
 
       document.getElementById("balanceHint").textContent =
-        `Рекомендуемая последовательность: ${rows.map((r) => r.label).join(" -> ")}. Максимальная коррекция ${fmt(maxAbs, 3)} мм.` +
-        ` Правило: delta>0 => угол выше и его нужно опустить. ${rotation.reference} ${rotation.mapping}`;
+        `${t("balance_hint")} ${rows.map((r) => r.label).join(" -> ")}. ${t("max_correction")} ${fmt(maxAbs, 3)} мм.` +
+        ` ${t("rule")} ${rotation.reference} ${rotation.mapping}`;
 
       const mode = document.getElementById("screwMode").value;
       const modeText = mode === "plane" ? "plane tilt" : "raw corners";
@@ -1179,16 +1548,16 @@
 
     function renderModel(mesh, model) {
       if (!model) {
-        document.getElementById("modelOut").textContent = "Не удалось построить модель плоскости.";
+        document.getElementById("modelOut").textContent = t("model_no_fit");
         return;
       }
 
       document.getElementById("modelOut").textContent = [
-        `Best-fit plane: z = a*x + b*y + c`,
+        t("model_plane"),
         `a=${fmt(model.a, 7)} b=${fmt(model.b, 7)} c=${fmt(model.c, 4)}`,
-        `Наклон по X на ширину стола: ${fmt(model.slope_across_x, 3)} мм (tilt ${fmt(model.tilt_x_deg, 3)}°)`,
-        `Наклон по Y на глубину стола: ${fmt(model.slope_across_y, 3)} мм (tilt ${fmt(model.tilt_y_deg, 3)}°)`,
-        `Класс: ${model.class_label}`,
+        `${t("model_slope_x")} ${fmt(model.slope_across_x, 3)} мм (${t("model_tilt")} ${fmt(model.tilt_x_deg, 3)}°)`,
+        `${t("model_slope_y")} ${fmt(model.slope_across_y, 3)} мм (${t("model_tilt")} ${fmt(model.tilt_y_deg, 3)}°)`,
+        `${t("model_class")} ${model.class_label}`,
       ].join("\n");
 
       document.getElementById("kpiPv").textContent = `${fmt(model.residual_pv)} мм`;
@@ -1199,8 +1568,8 @@
 
     function renderStats(mesh, model) {
       document.getElementById("meshStats").textContent =
-        `Сетка ${mesh.x_count}x${mesh.y_count} | min ${fmt(mesh.z_min)} мм | max ${fmt(mesh.z_max)} мм | range ${fmt(mesh.z_range)} мм | avg ${fmt(mesh.z_avg)} мм` +
-        (model ? ` | residual PV ${fmt(model.residual_pv)} мм | residual RMS ${fmt(model.residual_rms)} мм` : "");
+        `${t("mesh_size")} ${mesh.x_count}x${mesh.y_count} | ${t("mesh_min")} ${fmt(mesh.z_min)} мм | ${t("mesh_max")} ${fmt(mesh.z_max)} мм | ${t("mesh_range")} ${fmt(mesh.z_range)} мм | ${t("mesh_avg")} ${fmt(mesh.z_avg)} мм` +
+        (model ? ` | ${t("mesh_residual_pv")} ${fmt(model.residual_pv)} мм | ${t("mesh_residual_rms")} ${fmt(model.residual_rms)} мм` : "");
 
       document.getElementById("rawOut").textContent = JSON.stringify({ mesh, model }, null, 2);
     }
@@ -1231,8 +1600,8 @@
       }
 
       if (!state.meshA || !state.meshB) {
-        out.textContent = "Второй файл не загружен.";
-        clearCompareCanvas("Ожидание второго файла для сравнения");
+        out.textContent = t("compare_no_file");
+        clearCompareCanvas(t("compare_no_file"));
         return;
       }
 
@@ -1240,8 +1609,8 @@
         state.meshA.points.length !== state.meshB.points.length ||
         state.meshA.points[0].length !== state.meshB.points[0].length
       ) {
-        out.textContent = "Сравнение невозможно: размер сеток отличается.";
-        clearCompareCanvas("Размер сеток A и B отличается");
+        out.textContent = t("alert_compare_size");
+        clearCompareCanvas(t("alert_compare_size"));
         return;
       }
 
@@ -1249,8 +1618,8 @@
       const flatB = state.meshB.points.flat();
       const minRaw = Math.min(...flatA, ...flatB);
       const maxRaw = Math.max(...flatA, ...flatB);
-      const topFile = state.meshSource || "Файл A";
-      const bottomFile = state.meshSourceB || "Файл B";
+      const topFile = state.meshSource || "File A";
+      const bottomFile = state.meshSourceB || "File B";
       drawSplitHeatmap(
         "compareCanvas",
         state.meshA.points,
@@ -1321,22 +1690,22 @@
       const dAvg   = state.meshB.z_avg   - state.meshA.z_avg;
 
       const lines = [];
-      lines.push(span(`Сравнение ${topFile} (основной) vs ${bottomFile} (сравниваемый)`, COLORS.text));
+      lines.push(span(`${t("compare_header")} ${topFile} (A) ${t("compare_vs")} ${bottomFile} (B)`, COLORS.text));
       lines.push(span("─".repeat(90), COLORS.muted));
-      lines.push(metricLine("Range:", state.meshA.z_range, state.meshB.z_range, dRange, true, 0.001));
-      lines.push(metricLine("Average:", state.meshA.z_avg, state.meshB.z_avg, dAvg, false, 0.001));
+      lines.push(metricLine(t("table_range"), state.meshA.z_range, state.meshB.z_range, dRange, true, 0.001));
+      lines.push(metricLine(t("table_average"), state.meshA.z_avg, state.meshB.z_avg, dAvg, false, 0.001));
 
       if (modelA && modelB) {
         const dPV    = modelB.residual_pv  - modelA.residual_pv;
         const dRMS   = modelB.residual_rms - modelA.residual_rms;
         const dTwist = modelB.twist        - modelA.twist;
-        lines.push(metricLine("Residual PV:", modelA.residual_pv, modelB.residual_pv, dPV, true, 0.001));
-        lines.push(metricLine("Residual RMS:", modelA.residual_rms, modelB.residual_rms, dRMS, true, 0.001));
-        lines.push(metricLine("Twist:", modelA.twist, modelB.twist, dTwist, true, 0.001));
+        lines.push(metricLine(t("table_pv"), modelA.residual_pv, modelB.residual_pv, dPV, true, 0.001));
+        lines.push(metricLine(t("table_rms"), modelA.residual_rms, modelB.residual_rms, dRMS, true, 0.001));
+        lines.push(metricLine(t("table_twist"), modelA.twist, modelB.twist, dTwist, true, 0.001));
       }
 
       lines.push(span("─".repeat(90), COLORS.muted));
-      lines.push(span("Углы стола:", COLORS.text));
+      lines.push(span(t("corners"), COLORS.text));
       const cornerLabels = { front_left: "FL", front_right: "FR", rear_left: "RL", rear_right: "RR" };
       Object.entries(cornerLabels).forEach(([k, lbl]) => {
         const valA = state.meshA.corners[k];
@@ -1369,7 +1738,7 @@
       readFiles(e.target, (files) => {
         const merged = mergeMeshSources(files);
         if (!merged.chosen || !merged.chosen.meshCount) {
-          alert("Не найден [bed_mesh ...] ни в одном выбранном файле.");
+          alert(t("alert_no_mesh"));
           return;
         }
 
@@ -1409,20 +1778,12 @@
       });
     });
 
-    document.getElementById("meshSelect").addEventListener("change", (e) => {
-      const selectedName = e.target.value;
-      const mesh = state.allMeshes[selectedName];
-      if (mesh) {
-        renderAll(mesh);
-      }
-    });
-
     document.getElementById("cfgFile2").addEventListener("change", (e) => {
       readFiles(e.target, (files) => {
         const text = files[0] ? files[0].text : "";
         const meshes = parseMesh(text);
         if (!meshes || !Object.keys(meshes).length) {
-          alert("Во втором файле mesh не найден.");
+          alert(t("alert_no_mesh_b"));
           return;
         }
         const firstMesh = meshes[Object.keys(meshes)[0]];
@@ -1431,6 +1792,14 @@
         state.modelB = fitPlaneModel(firstMesh);
         updateCompare();
       });
+    });
+
+    document.getElementById("meshSelect").addEventListener("change", (e) => {
+      const selectedName = e.target.value;
+      const mesh = state.allMeshes[selectedName];
+      if (mesh) {
+        renderAll(mesh);
+      }
     });
 
     document.getElementById("pitch").addEventListener("change", () => {
@@ -1469,32 +1838,6 @@
 
     document.getElementById("vizMode").addEventListener("change", () => {
       if (state.meshA) renderVisualization(state.meshA, state.modelA);
-    });
-
-    document.getElementById("copyBtn").addEventListener("click", async () => {
-      if (!state.reportText) {
-        alert("Сначала загрузите mesh.");
-        return;
-      }
-      await navigator.clipboard.writeText(state.reportText);
-      alert("Отчет скопирован.");
-    });
-
-    document.getElementById("csvBtn").addEventListener("click", () => {
-      if (!state.meshA) {
-        alert("Сначала загрузите mesh.");
-        return;
-      }
-      const rows = computeScrewAdjustments(state.meshA, state.modelA);
-      const csv = ["corner,delta_mm,turns,degrees,direction,action"]
-        .concat(rows.map((r) => `${r.label},${r.delta.toFixed(6)},${r.turns.toFixed(4)},${r.degrees.toFixed(1)},${r.direction},${r.action}`))
-        .join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "bed_mesh_screw_adjustments.csv";
-      a.click();
-      URL.revokeObjectURL(a.href);
     });
 
   </script>
