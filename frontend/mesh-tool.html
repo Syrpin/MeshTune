@@ -268,30 +268,6 @@
       margin: 8px 0 6px;
       font-size: 0.88rem;
     }
-    .mesh-table-wrap {
-      border: 1px solid #31424f;
-      border-radius: 10px;
-      overflow: hidden;
-      background: #111920;
-      flex: 1 1 0;
-      min-height: 0;
-      height: 0;
-    }
-    .mesh-table {
-      width: 100%;
-      height: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      font-family: Consolas, Monaco, monospace;
-      font-size: 0.86rem;
-    }
-    .mesh-table td {
-      padding: 0 6px;
-      text-align: center;
-      border: 1px solid #2e404b;
-      color: #081116;
-      font-weight: 600;
-    }
     .hidden { display: none !important; }
     .copyright {
       margin-top: 14px;
@@ -429,10 +405,7 @@
         <div class="row">
           <span class="control">
             <label data-i18n="viz_label">Визуализация:</label>
-            <select id="vizMode">
-              <option value="heatmap" selected data-i18n="viz_heatmap">Heatmap (canvas)</option>
-              <option value="table" data-i18n="viz_table">Table (HTML)</option>
-            </select>
+            <span class="badge" data-i18n="viz_heatmap">Heatmap (canvas)</span>
           </span>
           <span class="control">
             <label data-i18n="calc_label">Расчет винтов:</label>
@@ -445,7 +418,6 @@
 
         <div class="viz-block">
           <canvas id="combinedCanvas" width="560" height="560"></canvas>
-          <div id="combinedTableWrap" class="mesh-table-wrap hidden"></div>
         </div>
       </section>
 
@@ -548,7 +520,6 @@
         target_farther: "дальше от сопла",
         viz_label: "Визуализация:",
         viz_heatmap: "Heatmap (canvas)",
-        viz_table: "Table (HTML)",
         calc_label: "Расчет винтов:",
         calc_plane: "по наклону плоскости",
         calc_raw: "по сырым углам",
@@ -655,7 +626,6 @@
         target_farther: "farther from nozzle",
         viz_label: "Visualization:",
         viz_heatmap: "Heatmap (canvas)",
-        viz_table: "Table (HTML)",
         calc_label: "Screw Calc:",
         calc_plane: "by plane tilt",
         calc_raw: "by raw corners",
@@ -762,7 +732,6 @@ When to Stop:
         target_farther: "más lejos de la boquilla",
         viz_label: "Visualización:",
         viz_heatmap: "Heatmap (canvas)",
-        viz_table: "Table (HTML)",
         calc_label: "Cálculo de Tornillo:",
         calc_plane: "por inclinación del plano",
         calc_raw: "por esquinas crudas",
@@ -1435,44 +1404,9 @@ Cuándo Detener:
       );
     }
 
-    function renderCombinedTable(containerId, topMatrix, bottomMatrix, topMin, topMax, bottomMin, bottomMax) {
-      const container = document.getElementById(containerId);
-      const rows = topMatrix.length;
-      const cols = topMatrix[0].length;
-      let html = '<table class="mesh-table"><tbody>';
-      for (let y = 0; y < rows; y++) {
-        html += "<tr>";
-        for (let x = 0; x < cols; x++) {
-          const srcY = rows - 1 - y;
-          const topVal = topMatrix[srcY][x];
-          const bottomVal = bottomMatrix[srcY][x];
-          const bgTop = colorForRaw(topVal, topMin, topMax);
-          const bgBottom = colorForResidual(bottomVal, bottomMin, bottomMax);
-          html += `<td style="background:linear-gradient(135deg, ${bgTop} 49%, ${bgBottom} 51%);">${topVal.toFixed(2)} | ${bottomVal.toFixed(2)}</td>`;
-        }
-        html += "</tr>";
-      }
-      html += "</tbody></table>";
-      container.innerHTML = html;
-    }
-
     function renderVisualization(mesh, model) {
-      const mode = document.getElementById("vizMode").value;
-      const combinedCanvas = document.getElementById("combinedCanvas");
-      const combinedTable = document.getElementById("combinedTableWrap");
-
-      const useTable = mode === "table";
-      combinedCanvas.classList.toggle("hidden", useTable);
-      combinedTable.classList.toggle("hidden", !useTable);
-
       if (!model) return;
-      const maxAbs = Math.max(Math.abs(model.residual_min), Math.abs(model.residual_max));
-
-      if (useTable) {
-        renderCombinedTable("combinedTableWrap", mesh.points, model.residuals, mesh.z_min, mesh.z_max, -maxAbs, maxAbs);
-      } else {
-        drawCombinedMesh(mesh, model);
-      }
+      drawCombinedMesh(mesh, model);
     }
 
     function getRotationProfile() {
@@ -1929,10 +1863,6 @@ Cuándo Detener:
 
     document.getElementById("mechTargetRight").addEventListener("change", rerenderOnMechanicsChange);
     document.getElementById("mechDirectionPrimary").addEventListener("change", rerenderOnMechanicsChange);
-
-    document.getElementById("vizMode").addEventListener("change", () => {
-      if (state.meshA) renderVisualization(state.meshA, state.modelA);
-    });
 
   </script>
 </body>
