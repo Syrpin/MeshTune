@@ -1,0 +1,10 @@
+backend/
+docker-compose.yml
+frontend/app.js
+frontend/cfg/
+frontend/frontend.rar
+frontend/index.html
+frontend/pitch-cal.html
+frontend/style.css
+.DS_Store
+node_modules/
